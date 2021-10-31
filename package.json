@@ -1,0 +1,39 @@
+{
+  "name": "binance-typescript-api-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettify": "prettier --write src/**/*.{ts,tsx,js,jsx,css,scss,json}",
+    "dev": "ts-node-dev src/app.ts",
+    "dev-logs": "rm -f logs/* && ts-node-dev src/app.ts && prettier --write logs/**/*.json",
+    "check-types": "tsc -p . --noEmit",
+    "check-types:watch": "tsc -p . --noEmit -w",
+    "generate-api": "ts-node-dev generateApi.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@devexperts/swagger-codegen-ts": "^2.0.0-alpha.27",
+    "@performance-artist/fp-ts-adt": "^1.0.16",
+    "@performance-artist/rx-utils": "^1.0.3",
+    "@types/ws": "^8.2.0",
+    "axios": "^0.21.4",
+    "binance-typescript-api": "git+https://github.com/performanceArtist/binance-typescript-api.git",
+    "fp-ts": "^2.11.4",
+    "fp-ts-rxjs": "^0.6.15",
+    "io-ts": "^2.2.16",
+    "io-ts-types": "^0.5.16",
+    "query-string": "^7.0.1",
+    "reconnecting-websocket": "^4.4.0",
+    "replace-in-file": "^6.2.0",
+    "rxjs": "^7.3.0",
+    "trading-indicators": "git+https://github.com/performanceArtist/trading-indicators.git",
+    "ws": "^8.2.2"
+  },
+  "devDependencies": {
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.4.3"
+  }
+}

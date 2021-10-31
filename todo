@@ -1,0 +1,22 @@
+1. Add limit + stop limit sequence. // Done
+2. Add margin(transfer + borrow/repay) functionality, mb combine spot + margin order in unified interface. // Done, but needs testing
+3. Add test infrastructure. 
+4. Add success rate runs(running a script across multiple time periods and calculating average profit/loss) // Done
+5. Better logging for the real-world scripts.
+6. Add scripts for fast buying with stop losses and balance usage. // Done
+7. Abstract away from isolated margin // Done
+8. Figure out a way to do isolated margin limit orders(api is a bit strange).
+9. Make an example of buying alts tied to BTC price movement. // Done (candleTrigger - a bit specific, but you can easily make different custom functions)
+10. Adjust makeSplitCandleStreams to work with multiple candle requests. // Done
+11. Buy/sell signal infrastructure.
+12. Add moving stop loss customization. // Done
+13. Add velocity or simply a "flat-line/curve up/curve down" indicator.
+14. Add virtual stop loss(stop loss that can be controlled programmatically - e.g. stop only when candle closes).
+15. Figure out an approach of using trend indicator in real time.
+16. Add break-even stop loss(using moving stop customization).
+17. Try using volume indicator to detect potential resistance/support lines. // 
+18. Come up with a generic way of combining indicators(perhaps a cross with buy/sell signals task).
+19. Decide where should I put `shareReplay`(on which level) to avoid additional requests and mistakes(cold streams that emit separately) in simulation/testing. 
+20. Decide whether to include convenience functions in interface of use "decorators" that work with a minimal interface(try out the second approach).
+21. Rewrite(?) simulation - find a way to deal with `price$` in `mockSpot`. As of now, streams are created outside of the functions that are actually supposed to fetch data, which is odd. It is done so the streams would not be duplicated(so they have the same source).
+22. Try getting rid of RSI duplication(getRSI).
