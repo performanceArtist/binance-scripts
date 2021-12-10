@@ -1,4 +1,4 @@
-import { nonEmptyArray, reader } from 'fp-ts';
+import { reader } from 'fp-ts';
 import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
 import { CurrencyPair } from '../../domain/data/currencyPair';
@@ -37,16 +37,7 @@ export const makeTestScript = pipe(
         const { spot, action$ } = makeMockSpot({ price$ });
 
         const script = makeScript({
-          getRSI: params =>
-            pipe(
-              streams,
-              makeRSIStreams(params.rsiFromCandle, params.period),
-              rsi =>
-                pipe(
-                  rsi.currentClosed$,
-                  observableEither.map(nonEmptyArray.last)
-                )
-            ),
+          getCurrentRSIStreams: params => pipe(streams, makeRSIStreams(params)),
           spot
         })({ symbol: params.symbol, ...params.script });
 

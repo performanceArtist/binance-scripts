@@ -1,4 +1,4 @@
-import { Candle, Spot, Interval, ObservableEither } from '../../domain/types';
+import { Spot } from '../../domain/types';
 import { either } from 'fp-ts';
 import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
@@ -10,24 +10,28 @@ import {
   SpotMarketStopLimit
 } from '../../domain/trade/marketStopLimit';
 import { CurrencyPair } from '../../domain/data/currencyPair';
+import {
+  CurrentRSIStreamsParams,
+  GetCurrentRSIStreams
+} from '../../domain/indicators';
+import { ScriptState } from '../shared/frame';
 
 export type ScriptDeps = {
   spot: Spot;
-  getRSI: (params: ScriptRSIParams) => ObservableEither<Error, number>;
+  getCurrentRSIStreams: GetCurrentRSIStreams;
   spotMarketStopLimit: SpotMarketStopLimit;
 };
 
-export type ScriptRSIParams = {
+export type ScriptParams = {
   symbol: CurrencyPair;
-  interval: Interval;
-  period: number;
-  lookbehind: number;
-  rsiFromCandle: (candle: Candle) => number;
-};
-
-export type ScriptState = {
-  inPosition: boolean;
-  triggers: ScriptTrigger[];
+  getBudget: MarketStopLimitParams['getBudget'];
+  getStop: MarketStopLimitParams['getStop'];
+  rerun: (state: ScriptState<ScriptTrigger>) => boolean;
+  RSI: {
+    params: Omit<CurrentRSIStreamsParams, 'symbol'>;
+    buyThreshold: number;
+    sellThreshold: number;
+  };
 };
 
 export type ScriptTrigger =
@@ -37,33 +41,18 @@ export type ScriptTrigger =
     }
   | { type: 'PROFIT_TAKEN'; profit: number };
 
-export type ScriptParams = {
-  symbol: CurrencyPair;
-  getBudget: MarketStopLimitParams['getBudget'];
-  getStop: MarketStopLimitParams['getStop'];
-  rerun: (state: ScriptState) => boolean;
-  RSI: {
-    interval: Interval;
-    period: number;
-    fromCandle: (candle: Candle) => number;
-    lookbehind: number;
-    buyThreshold: number;
-    sellThreshold: number;
-  };
-};
-
 export const makeScript = (deps: ScriptDeps) => (params: ScriptParams) => {
-  const { spot, spotMarketStopLimit, getRSI } = deps;
+  const { spot, spotMarketStopLimit, getCurrentRSIStreams } = deps;
   const { symbol, getBudget, getStop, RSI, rerun } = params;
 
-  const rsi$ = getRSI({ symbol, ...RSI, rsiFromCandle: RSI.fromCandle });
-  const state = new rx.BehaviorSubject<ScriptState>({
+  const rsi = getCurrentRSIStreams({ symbol, ...RSI.params });
+  const state = new rx.BehaviorSubject<ScriptState<ScriptTrigger>>({
     inPosition: false,
     triggers: []
   });
 
   const script$ = pipe(
-    rsi$, // open phase
+    rsi.currentClosed$, // open phase
     rxo.filter(
       either.exists(rsi => rsi < RSI.buyThreshold && rerun(state.getValue()))
     ),
@@ -104,7 +93,7 @@ export const makeScript = (deps: ScriptDeps) => (params: ScriptParams) => {
       );
 
       return pipe(
-        rsi$,
+        rsi.currentClosed$,
         rxo.takeUntil(rx.merge(stopFilled$, positionClosed$)),
         rxo.filter(either.exists(rsi => rsi > RSI.sellThreshold)),
         rxo.take(1),

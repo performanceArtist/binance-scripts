@@ -8,7 +8,7 @@ import { Either } from 'fp-ts/lib/Either';
 import { CandleStreams } from './candles';
 
 export type AccStreams<A> = {
-  currentClosed$: rx.Observable<Either<Error, A>>;
+  closed$: rx.Observable<Either<Error, A>>;
   current$: rx.Observable<Either<Error, A>>;
 };
 
@@ -16,7 +16,7 @@ export const makeAccStreams = <A>(
   init: (candles: Candle[]) => Either<Error, A>,
   next: (acc: A, cur: Candle) => Either<Error, A>
 ) => (data: CandleStreams): AccStreams<A> => {
-  const currentClosed$ = pipe(
+  const closed$ = pipe(
     data.historical$,
     rxo.map(either.chain(init)),
     rxo.switchMap(initial =>
@@ -37,7 +37,7 @@ export const makeAccStreams = <A>(
   );
 
   const current$ = pipe(
-    rx.combineLatest([currentClosed$, data.current$]),
+    rx.combineLatest([closed$, data.current$]),
     rxo.map(([acc, cur]) =>
       pipe(
         sequenceT(either.either)(acc, cur),
@@ -47,5 +47,5 @@ export const makeAccStreams = <A>(
     rxo.shareReplay(1)
   );
 
-  return { currentClosed$, current$ };
+  return { closed$, current$ };
 };

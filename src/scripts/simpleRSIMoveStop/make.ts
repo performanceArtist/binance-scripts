@@ -1,10 +1,4 @@
-import {
-  Candle,
-  Spot,
-  Interval,
-  ObservableEither,
-  StopLossOrder
-} from '../../domain/types';
+import { Spot, StopLossOrder } from '../../domain/types';
 import { either } from 'fp-ts';
 import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
@@ -21,6 +15,30 @@ import {
   MovingStopLossFromCandles,
   MovingStopParams
 } from '../../domain/trade/movingStopLimit';
+import {
+  CurrentRSIStreamsParams,
+  GetCurrentRSIStreams
+} from '../../domain/indicators';
+
+export type ScriptDeps = {
+  getCurrentRSIStreams: GetCurrentRSIStreams;
+  spotMarketStopLimit: SpotMarketStopLimit;
+  movingStopLossFromCandles: MovingStopLossFromCandles;
+  spot: Spot;
+};
+
+export type ScriptParams = {
+  symbol: CurrencyPair;
+  getBudget: MarketStopLimitParams['getBudget'];
+  getStop: MarketStopLimitParams['getStop'];
+  RSI: {
+    params: Omit<CurrentRSIStreamsParams, 'symbol'>;
+    buyThreshold: number;
+    sellThreshold: number;
+  };
+  restop: Omit<MovingStopParams, 'order' | 'symbol'>;
+  rerun: (state: ScriptState<ScriptTrigger>) => boolean;
+};
 
 export type ScriptTrigger =
   | {
@@ -30,47 +48,22 @@ export type ScriptTrigger =
     }
   | { type: 'PROFIT_TAKEN'; profit: number };
 
-export type ScriptStopDeps = {
-  getRSI: (params: ScriptRSIParams) => ObservableEither<Error, number>;
-  spotMarketStopLimit: SpotMarketStopLimit;
-  movingStopLossFromCandles: MovingStopLossFromCandles;
-  spot: Spot;
-};
-
-export type ScriptRSIParams = {
-  symbol: CurrencyPair;
-  interval: Interval;
-  period: number;
-  lookbehind: number;
-  rsiFromCandle: (candle: Candle) => number;
-};
-
-export type ScriptStopParams = {
-  symbol: CurrencyPair;
-  getBudget: MarketStopLimitParams['getBudget'];
-  getStop: MarketStopLimitParams['getStop'];
-  RSI: {
-    interval: Interval;
-    period: number;
-    fromCandle: (candle: Candle) => number;
-    lookbehind: number;
-    buyThreshold: number;
-    sellThreshold: number;
-  };
-  restop: Omit<MovingStopParams, 'order' | 'symbol'>;
-  rerun: (state: ScriptState<ScriptTrigger>) => boolean;
-};
-
-export const makeScript = (deps: ScriptStopDeps) => (
-  params: ScriptStopParams
-) => {
-  const { spot, getRSI, movingStopLossFromCandles, spotMarketStopLimit } = deps;
+export const makeScript = (deps: ScriptDeps) => (params: ScriptParams) => {
+  const {
+    spot,
+    getCurrentRSIStreams,
+    movingStopLossFromCandles,
+    spotMarketStopLimit
+  } = deps;
   const { symbol, getBudget, RSI, rerun, restop, getStop } = params;
-  const rsi$ = getRSI({ symbol, ...RSI, rsiFromCandle: RSI.fromCandle });
+  const rsi = getCurrentRSIStreams({ symbol, ...RSI.params });
 
   return frame<number, StopLossOrder, void, ScriptTrigger>({
     rerun,
-    open$: pipe(rsi$, rxo.filter(either.exists(rsi => rsi < RSI.buyThreshold))),
+    open$: pipe(
+      rsi.currentClosed$,
+      rxo.filter(either.exists(rsi => rsi < RSI.buyThreshold))
+    ),
     execute: () => spotMarketStopLimit({ symbol, getBudget, getStop }),
     manage: (stopLossOrder, onClose) => {
       const stopLoss = movingStopLossFromCandles({
@@ -102,7 +95,7 @@ export const makeScript = (deps: ScriptStopDeps) => (
       );
 
       const position$ = pipe(
-        rsi$,
+        rsi.currentClosed$,
         rxo.takeUntil(rx.merge(stopFilled$, positionClosed$)),
         rxo.filter(either.exists(rsi => rsi > RSI.sellThreshold)),
         rxo.take(1),

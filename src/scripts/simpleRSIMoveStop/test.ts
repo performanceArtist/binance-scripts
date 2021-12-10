@@ -5,9 +5,9 @@ import {
   makeSplitCandleStreams,
   SplitCandleStreamsParams
 } from '../../domain/simulation';
-import { makeScript, ScriptStopParams } from './make';
+import { makeScript, ScriptParams } from './make';
 import { pipe } from 'fp-ts/lib/function';
-import { nonEmptyArray, reader } from 'fp-ts';
+import { reader } from 'fp-ts';
 import { movingStopLossFromCandles } from '../../domain/trade/movingStopLimit';
 import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
 import { makeRSIStreams } from '../../domain/indicators';
@@ -16,7 +16,7 @@ import { inject } from '../../utils/partial';
 export type SimulationParams = {
   symbol: CurrencyPair;
   splitStreams: Omit<SplitCandleStreamsParams, 'symbol'>;
-  script: Omit<ScriptStopParams, 'symbol'>;
+  script: Omit<ScriptParams, 'symbol'>;
 };
 
 export const makeTestScript = pipe(
@@ -40,16 +40,7 @@ export const makeTestScript = pipe(
 
         const script = makeScript({
           getClosedCurrentCandle: () => streams.currentClosed$,
-          getRSI: params =>
-            pipe(
-              streams,
-              makeRSIStreams(params.rsiFromCandle, params.period),
-              rsi =>
-                pipe(
-                  rsi.currentClosed$,
-                  observableEither.map(nonEmptyArray.last)
-                )
-            ),
+          getCurrentRSIStreams: params => pipe(streams, makeRSIStreams(params)),
           spot
         })({ symbol: params.symbol, ...params.script });
 
