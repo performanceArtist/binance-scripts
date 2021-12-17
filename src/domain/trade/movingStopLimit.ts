@@ -1,4 +1,4 @@
-import { array, either } from 'fp-ts';
+import { array, either, option, reader } from 'fp-ts';
 import { Either } from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/function';
 import { BehaviorSubject } from 'rxjs';
@@ -10,7 +10,7 @@ import {
   Spot,
   StopLossOrder
 } from '../types';
-import { StopLoss } from './stopLoss';
+import { fromLimit, StopLoss } from './stopLoss';
 import * as rxo from 'rxjs/operators';
 import { switchMapEither } from '../../utils/switchMapEither';
 import { splitStream } from '../../utils/splitStream';
@@ -23,7 +23,11 @@ export type MovingStopParams = {
   symbol: CurrencyPair;
   interval: Interval;
   count: number;
-  getStop: (candles: Candle[], prevStop: StopLoss) => Either<Error, StopLoss>;
+  getStop: (
+    candles: Candle[],
+    prevStop: StopLoss,
+    order: StopLossOrder
+  ) => Either<Error, StopLoss>;
 };
 
 export const movingStopLossFromCandles = (deps: {
@@ -42,7 +46,9 @@ export const movingStopLossFromCandles = (deps: {
         }),
         splitStream(count),
         rxo.map(array.sequence(either.either)),
-        rxo.map(either.chain(candles => getStop(candles, current.getValue())))
+        rxo.map(
+          either.chain(candles => getStop(candles, current.getValue(), order))
+        )
       )
   })({ order, symbol });
 };
@@ -50,6 +56,73 @@ export const movingStopLossFromCandles = (deps: {
 export type MovingStopLossFromCandles = ReturnType<
   typeof movingStopLossFromCandles
 >;
+
+export const thresholdStopLoss = pipe(
+  movingStopLossFromCandles,
+  reader.map(
+    movingStopLossFromCandles => (
+      params: MovingStopParams & {
+        maxLimit: (base: number) => number;
+      }
+    ) =>
+      movingStopLossFromCandles({
+        ...params,
+        getStop: (candles, prevStop, order) =>
+          pipe(
+            params.getStop(candles, prevStop, order),
+            either.chain(newStop => {
+              const max = params.maxLimit(order.price);
+              const isTargetReached = prevStop.limit >= max;
+
+              if (isTargetReached) {
+                return either.left(new Error('Target reached'));
+              } else {
+                const finalStop =
+                  newStop.limit >= max
+                    ? fromLimit(1 - newStop.limit / newStop.stop)(max)
+                    : newStop;
+                return either.right(finalStop);
+              }
+            }),
+            either.filterOrElse(
+              newStop => newStop.stop > prevStop.stop,
+              () =>
+                new Error('Stop loss should be moved towards the profit side')
+            )
+          )
+      })
+  )
+);
+
+export const getHighLowStop = ({
+  getLimit,
+  fromCandle,
+  stopOffsetPercent
+}: {
+  getLimit: (current: Candle, highLow: { high: number; low: number }) => number;
+  fromCandle: (candle: Candle) => number;
+  stopOffsetPercent: number;
+}): MovingStopParams['getStop'] => candles =>
+  pipe(
+    candles,
+    array.last,
+    option.map(last =>
+      fromLimit(stopOffsetPercent)(
+        getLimit(last, getHighLow(fromCandle)(candles))
+      )
+    ),
+    either.fromOption(() => new Error('Failed to calculate stop loss'))
+  );
+
+export const getHighLow = (fromCandle: (candle: Candle) => number) => (
+  candles: Candle[]
+) =>
+  pipe(candles, array.map(fromCandle), prices => ({
+    high: Math.max(...prices),
+    low: Math.min(...prices)
+  }));
+
+export type ThresholdStopLoss = ReturnType<typeof thresholdStopLoss>;
 
 export const makeMovingStopLoss = (deps: {
   spot: Spot;
