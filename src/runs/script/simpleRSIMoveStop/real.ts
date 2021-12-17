@@ -12,6 +12,7 @@ import { fromLimit, fromLossPercent } from '../../../domain/trade/stopLoss';
 import { pipe } from 'fp-ts/lib/function';
 import { sequenceT } from 'fp-ts/lib/Apply';
 import { array, either, option } from 'fp-ts';
+import { makeCandleStreams } from '../../../domain/data';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -19,6 +20,10 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 );
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
+
+const market = makeMarketAPI({ httpClient, socketClient });
+
+const makeStreams = makeCandleStreams({ market });
 
 const runRSIScript = runScript({
   market: makeMarketAPI({ httpClient, socketClient }),
@@ -28,11 +33,21 @@ const runRSIScript = runScript({
   signQuery
 });
 
+const symbol = {
+  base: 'BTC',
+  quote: 'USDT'
+};
+
 const { script$, state } = runRSIScript({
   symbol: {
     base: 'BTC',
     quote: 'USDT'
   },
+  candleStreams: makeStreams({
+    symbol,
+    interval: '5m',
+    lookbehind: 500
+  }),
   restop: {
     interval: '5m',
     count: 20,
@@ -54,10 +69,8 @@ const { script$, state } = runRSIScript({
   rerun: state => state.triggers.length === 0,
   RSI: {
     params: {
-      interval: '5m',
       period: 14,
-      fromCandle: candle => candle.close,
-      lookbehind: 500
+      fromCandle: candle => candle.close
     },
     buyThreshold: 30,
     sellThreshold: 70

@@ -15,13 +15,10 @@ import {
   MovingStopLossFromCandles,
   MovingStopParams
 } from '../../domain/trade/movingStopLimit';
-import {
-  CurrentRSIStreamsParams,
-  GetCurrentRSIStreams
-} from '../../domain/indicators';
+import { makeRSIStreams, RSIParams } from '../../domain/indicators';
+import { CandleStreams } from '../../domain/data';
 
 export type ScriptDeps = {
-  getCurrentRSIStreams: GetCurrentRSIStreams;
   spotMarketStopLimit: SpotMarketStopLimit;
   movingStopLossFromCandles: MovingStopLossFromCandles;
   spot: Spot;
@@ -29,10 +26,11 @@ export type ScriptDeps = {
 
 export type ScriptParams = {
   symbol: CurrencyPair;
+  candleStreams: CandleStreams;
   getBudget: MarketStopLimitParams['getBudget'];
   getStop: MarketStopLimitParams['getStop'];
   RSI: {
-    params: Omit<CurrentRSIStreamsParams, 'symbol'>;
+    params: RSIParams;
     buyThreshold: number;
     sellThreshold: number;
   };
@@ -49,14 +47,17 @@ export type ScriptTrigger =
   | { type: 'PROFIT_TAKEN'; profit: number };
 
 export const makeScript = (deps: ScriptDeps) => (params: ScriptParams) => {
+  const { spot, movingStopLossFromCandles, spotMarketStopLimit } = deps;
   const {
-    spot,
-    getCurrentRSIStreams,
-    movingStopLossFromCandles,
-    spotMarketStopLimit
-  } = deps;
-  const { symbol, getBudget, RSI, rerun, restop, getStop } = params;
-  const rsi = getCurrentRSIStreams({ symbol, ...RSI.params });
+    symbol,
+    candleStreams,
+    getBudget,
+    RSI,
+    rerun,
+    restop,
+    getStop
+  } = params;
+  const rsi = makeRSIStreams(RSI.params)(candleStreams);
 
   return frame<number, StopLossOrder, void, ScriptTrigger>({
     rerun,

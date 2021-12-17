@@ -10,13 +10,12 @@ import { pipe } from 'fp-ts/lib/function';
 import { reader } from 'fp-ts';
 import { movingStopLossFromCandles } from '../../domain/trade/movingStopLimit';
 import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
-import { makeRSIStreams } from '../../domain/indicators';
 import { inject } from '../../utils/partial';
 
 export type SimulationParams = {
   symbol: CurrencyPair;
   splitStreams: Omit<SplitCandleStreamsParams, 'symbol'>;
-  script: Omit<ScriptParams, 'symbol'>;
+  script: Omit<ScriptParams, 'symbol' | 'candleStreams'>;
 };
 
 export const makeTestScript = pipe(
@@ -40,9 +39,8 @@ export const makeTestScript = pipe(
 
         const script = makeScript({
           getClosedCurrentCandle: () => streams.currentClosed$,
-          getCurrentRSIStreams: params => pipe(streams, makeRSIStreams(params)),
           spot
-        })({ symbol: params.symbol, ...params.script });
+        })({ symbol: params.symbol, candleStreams: streams, ...params.script });
 
         return { ...script, action$ };
       })

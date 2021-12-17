@@ -12,7 +12,7 @@ Write a minimal interface that represents one ability or entity.
 
 If you need convenience functions, which only depend on the base interface, write them outside and export their types. Use cases can now depend on the convenience functions, which can be created with or without interface dependence.
 
-Use case should not inforce any additional constraints - i.e. it should not create convenience functions or wrappers over the interface. 
+Use case should not enforce any additional constraints - i.e. it should not create convenience functions or wrappers over the interface. 
 
 Use case should only work with parameters, not dependencies(except for simply calling/using them with parameters). If there is a need to manage dependencies, you can always make a convenience wrapper(maybe it is also a pattern? What would you call it?).
 
@@ -20,4 +20,4 @@ The typical scenario should look like this:
 
 Use case(params and logic) -> Deps wrapper(deps management - resolve dependencies until top-level) -> Implementation(pass top-level dependencies and parameters).
 
-Deps wrapper should deal with implementation dependencies, not "core" or external dependencies. These should be filled in at the last step. In my case, the "core" dependencies are binance api controllers and more broadly, stuff that depends on binance http and socket clients.
+Deps wrapper should deal with implementation dependencies, not "core" or external dependencies. These should be filled in at the last step. In my case, the "core" dependencies are binance api controllers and, more broadly, stuff that depends on binance http and socket clients.

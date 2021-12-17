@@ -95,10 +95,8 @@ symbols.forEach(symbol => {
       rerun: state => !state.inPosition,
       RSI: {
         params: {
-          interval: '5m',
           period: 14,
-          fromCandle: candle => candle.close,
-          lookbehind: 500
+          fromCandle: candle => candle.close
         },
         buyThreshold: 30,
         sellThreshold: 70

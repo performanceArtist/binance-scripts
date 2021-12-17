@@ -1,44 +1,28 @@
-import { array, either, nonEmptyArray, reader } from 'fp-ts';
+import { array, either, nonEmptyArray } from 'fp-ts';
 import { observableEither } from 'fp-ts-rxjs';
 import { flow, pipe } from 'fp-ts/lib/function';
 import { NonEmptyArray } from 'fp-ts/lib/NonEmptyArray';
-import {
-  getRSIAcc,
-  nextRSI,
-  toPricePoint,
-  withNextArrayQueue
-} from 'trading-indicators';
-import {
-  CandleStreamsParams,
-  makeAccStreams,
-  makeCandleStreams
-} from '../data';
+import { fromRSIAcc, initRSIAcc, nextRSIAcc } from 'trading-indicators';
+import { makeAccStreams } from '../data';
 import { Candle, IndicatorStreams } from '../types';
 
 export const getCandleRSIAcc = (fromCandle: (candle: Candle) => number) => (
   period: number
 ) => (candles: Candle[]) =>
-  pipe(candles, array.map(fromCandle), getRSIAcc(period));
+  pipe(candles, array.map(fromCandle), initRSIAcc(period));
 
-export const makeRSIAccStreams = (
-  fromCandle: (candle: Candle) => number,
-  period: number
-) =>
+export type RSIParams = {
+  fromCandle: (candle: Candle) => number;
+  period: number;
+};
+
+export const makeRSIAccStreams = ({ fromCandle, period }: RSIParams) =>
   makeAccStreams(
     flow(
       getCandleRSIAcc(fromCandle)(period),
       either.fromOption(() => new Error('Failed to calculate RSI'))
     ),
-    (acc, cur) => {
-      const nextAcc = withNextArrayQueue(toPricePoint)(acc.acc, cur.close);
-      const newPrice = nonEmptyArray.last(nextAcc.result);
-      const newRSI = nextRSI(period)(acc.rsi, newPrice);
-
-      return either.right({
-        acc: nextAcc,
-        rsi: newRSI
-      });
-    }
+    (acc, cur) => either.right(nextRSIAcc(period)(acc, fromCandle(cur)))
   );
 
 export type RSIIndicatorStreams = IndicatorStreams<
@@ -46,28 +30,14 @@ export type RSIIndicatorStreams = IndicatorStreams<
   number
 >;
 
-export const makeRSIStreams = ({
-  fromCandle,
-  period
-}: {
-  fromCandle: (candle: Candle) => number;
-  period: number;
-}) =>
+export const makeRSIStreams = (params: RSIParams) =>
   flow(
-    makeRSIAccStreams(fromCandle, period),
+    makeRSIAccStreams(params),
     ({
       closed$,
       current$
     }): IndicatorStreams<NonEmptyArray<number>, number> => {
-      const closedRSI$ = pipe(
-        closed$,
-        observableEither.map(acc =>
-          pipe(
-            acc.rsi,
-            nonEmptyArray.map(rsi => rsi.rsi)
-          )
-        )
-      );
+      const closedRSI$ = pipe(closed$, observableEither.map(fromRSIAcc));
 
       return {
         closed$: closedRSI$,
@@ -77,26 +47,12 @@ export const makeRSIStreams = ({
         ),
         current$: pipe(
           current$,
-          observableEither.map(acc =>
-            pipe(acc.rsi, nonEmptyArray.last, rsi => rsi.rsi)
+          observableEither.map(([_, rsi]) =>
+            pipe(rsi, nonEmptyArray.last, rsi => rsi.rsi)
           )
         )
       };
     }
   );
 
-export type RSIParams = {
-  fromCandle: (candle: Candle) => number;
-  period: number;
-};
-
-export type CurrentRSIStreamsParams = RSIParams & CandleStreamsParams;
-
-export const getCurrentRSIStreams = pipe(
-  makeCandleStreams,
-  reader.map(makeCandleStreams => (params: CurrentRSIStreamsParams) =>
-    pipe(makeCandleStreams(params), makeRSIStreams(params))
-  )
-);
-
-export type GetCurrentRSIStreams = ReturnType<typeof getCurrentRSIStreams>;
+export type GetRSIStreams = typeof makeRSIStreams;

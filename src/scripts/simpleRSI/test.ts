@@ -2,7 +2,6 @@ import { reader } from 'fp-ts';
 import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
 import { CurrencyPair } from '../../domain/data/currencyPair';
-import { makeRSIStreams } from '../../domain/indicators';
 import {
   makeMockSpot,
   makeSplitCandleStreams,
@@ -15,7 +14,7 @@ import { makeScript, ScriptParams } from './make';
 export type SimulationParams = {
   symbol: CurrencyPair;
   splitStreams: Omit<SplitCandleStreamsParams, 'symbol'>;
-  script: Omit<ScriptParams, 'symbol'>;
+  script: Omit<ScriptParams, 'symbol' | 'candleStreams'>;
 };
 
 export const makeTestScript = pipe(
@@ -37,9 +36,8 @@ export const makeTestScript = pipe(
         const { spot, action$ } = makeMockSpot({ price$ });
 
         const script = makeScript({
-          getCurrentRSIStreams: params => pipe(streams, makeRSIStreams(params)),
           spot
-        })({ symbol: params.symbol, ...params.script });
+        })({ symbol: params.symbol, candleStreams: streams, ...params.script });
 
         return { ...script, action$ };
       })

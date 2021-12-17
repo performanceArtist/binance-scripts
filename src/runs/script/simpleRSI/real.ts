@@ -9,6 +9,7 @@ import ws from 'ws';
 import { tradeController } from '../../../../generated/spot_api.yaml/paths/TradeController';
 import { streamController } from '../../../../generated/spot_api.yaml/paths/StreamController';
 import { fromLossPercent } from '../../../domain/trade/stopLoss';
+import { makeCandleStreams } from '../../../domain/data';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -17,28 +18,36 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
+const market = makeMarketAPI({ httpClient, socketClient });
+
+const makeStreams = makeCandleStreams({ market });
+
 const runRSIScript = runScript({
-  market: makeMarketAPI({ httpClient, socketClient }),
   socketClient,
   signQuery,
   trade: tradeController({ httpClient }),
   stream: streamController({ httpClient })
 });
 
+const symbol = {
+  base: 'BTC',
+  quote: 'USDT'
+};
+
 const script$ = runRSIScript({
-  symbol: {
-    base: 'BTC',
-    quote: 'USDT'
-  },
+  symbol,
+  candleStreams: makeStreams({
+    symbol,
+    interval: '1m',
+    lookbehind: 500
+  }),
   getBudget: () => 100,
   getStop: fromLossPercent(0.015, 0.0025),
   rerun: state => state.triggers.length === 0,
   RSI: {
     params: {
-      interval: '1m',
       period: 14,
-      fromCandle: candle => candle.close,
-      lookbehind: 500
+      fromCandle: candle => candle.close
     },
     buyThreshold: 30,
     sellThreshold: 70

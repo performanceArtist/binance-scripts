@@ -4,10 +4,10 @@ import {
   makeBinanceWebSocketClient
 } from 'binance-typescript-api';
 import { config } from '../../config';
-import { array, either } from 'fp-ts';
+import { array, either, option } from 'fp-ts';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
-import { getSmoothStochRSI } from 'trading-indicators';
+import { getExponentialMA, getStochRSI } from 'trading-indicators';
 import { getXLastCandles } from '../../domain/trade/market';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
@@ -32,7 +32,8 @@ const stochRSI$ = pipe(
     either.map(
       flow(
         array.map(c => c.close),
-        getSmoothStochRSI(14)
+        getStochRSI(14),
+        option.chain(getExponentialMA(5))
       )
     )
   ),

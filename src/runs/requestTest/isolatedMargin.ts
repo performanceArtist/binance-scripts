@@ -8,7 +8,6 @@ import { config } from '../../config';
 import { array, either } from 'fp-ts';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
-import { exponentialMA, simpleMA } from 'trading-indicators';
 import { marginController } from '../../../generated/spot_api.yaml/paths/MarginController';
 import { switchMapEither } from '../../utils/switchMapEither';
 import { isolatedMarginStreamController } from '../../../generated/spot_api.yaml/paths/IsolatedMarginStreamController';

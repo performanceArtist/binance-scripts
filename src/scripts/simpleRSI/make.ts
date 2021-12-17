@@ -10,25 +10,23 @@ import {
   SpotMarketStopLimit
 } from '../../domain/trade/marketStopLimit';
 import { CurrencyPair } from '../../domain/data/currencyPair';
-import {
-  CurrentRSIStreamsParams,
-  GetCurrentRSIStreams
-} from '../../domain/indicators';
+import { makeRSIStreams, RSIParams } from '../../domain/indicators';
 import { ScriptState } from '../shared/frame';
+import { CandleStreams } from '../../domain/data';
 
 export type ScriptDeps = {
   spot: Spot;
-  getCurrentRSIStreams: GetCurrentRSIStreams;
   spotMarketStopLimit: SpotMarketStopLimit;
 };
 
 export type ScriptParams = {
   symbol: CurrencyPair;
+  candleStreams: CandleStreams;
   getBudget: MarketStopLimitParams['getBudget'];
   getStop: MarketStopLimitParams['getStop'];
   rerun: (state: ScriptState<ScriptTrigger>) => boolean;
   RSI: {
-    params: Omit<CurrentRSIStreamsParams, 'symbol'>;
+    params: RSIParams;
     buyThreshold: number;
     sellThreshold: number;
   };
@@ -42,10 +40,10 @@ export type ScriptTrigger =
   | { type: 'PROFIT_TAKEN'; profit: number };
 
 export const makeScript = (deps: ScriptDeps) => (params: ScriptParams) => {
-  const { spot, spotMarketStopLimit, getCurrentRSIStreams } = deps;
-  const { symbol, getBudget, getStop, RSI, rerun } = params;
+  const { spot, spotMarketStopLimit } = deps;
+  const { symbol, candleStreams, getBudget, getStop, RSI, rerun } = params;
 
-  const rsi = getCurrentRSIStreams({ symbol, ...RSI.params });
+  const rsi = makeRSIStreams(RSI.params)(candleStreams);
   const state = new rx.BehaviorSubject<ScriptState<ScriptTrigger>>({
     inPosition: false,
     triggers: []

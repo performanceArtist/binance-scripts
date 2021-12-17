@@ -7,7 +7,7 @@ import { config } from '../../config';
 import { array, either } from 'fp-ts';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
-import { exponentialMA, simpleMA } from 'trading-indicators';
+import { getExponentialMA, getSimpleMA } from 'trading-indicators';
 import { getXLastCandles } from '../../domain/trade/market';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
@@ -34,7 +34,7 @@ const simpleMA$ = pipe(
     either.chain(
       flow(
         array.map(c => c.close),
-        simpleMA(20),
+        getSimpleMA(20),
         either.fromOption(() => new Error('Insufficient data'))
       )
     )
@@ -51,7 +51,7 @@ const exponentialMA$ = pipe(
     either.chain(
       flow(
         array.map(c => c.close),
-        exponentialMA(20),
+        getExponentialMA(20),
         either.fromOption(() => new Error('Insufficient data'))
       )
     )
