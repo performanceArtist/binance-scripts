@@ -9,13 +9,14 @@ import {
   makeGetAverageBTCDominance,
   makeGetBTCDominance
 } from '../../domain/indicators/dominance';
+import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
   config
 );
 
-const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);
+const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
 const market = makeMarketAPI({ httpClient, socketClient });
 

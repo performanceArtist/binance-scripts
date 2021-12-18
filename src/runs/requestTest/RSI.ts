@@ -9,13 +9,14 @@ import { flow, pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
 import { getRSI } from 'trading-indicators';
 import { getXLastCandles } from '../../domain/trade/market';
+import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
   config
 );
 
-const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);
+const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
 const market = makeMarketAPI({ httpClient, socketClient });
 

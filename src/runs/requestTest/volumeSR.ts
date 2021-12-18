@@ -10,13 +10,14 @@ import * as rxo from 'rxjs/operators';
 import { volumeLevels, volumeToMax } from 'trading-indicators';
 import { observableEither } from 'fp-ts-rxjs';
 import { getXCandles } from '../../domain/trade/market';
+import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
   config
 );
 
-const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);
+const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
 const market = makeMarketAPI({ httpClient, socketClient });
 

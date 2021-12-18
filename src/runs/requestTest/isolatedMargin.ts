@@ -12,13 +12,14 @@ import { marginController } from '../../../generated/spot_api.yaml/paths/MarginC
 import { switchMapEither } from '../../utils/switchMapEither';
 import { isolatedMarginStreamController } from '../../../generated/spot_api.yaml/paths/IsolatedMarginStreamController';
 import { tradeController } from '../../../generated/spot_api.yaml/paths/TradeController';
+import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
   config
 );
 
-const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);
+const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
 const m = makeIsolatedMargin({
   signQuery,

@@ -9,13 +9,14 @@ import { streamController } from '../../../generated/spot_api.yaml/paths/StreamC
 import { tradeController } from '../../../generated/spot_api.yaml/paths/TradeController';
 import { getBalanceOf } from '../../binance/account';
 import { fromLossPercent } from '../../domain/trade/stopLoss';
+import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
   config
 );
 
-const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);
+const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
 const trade = tradeController({ httpClient });
 

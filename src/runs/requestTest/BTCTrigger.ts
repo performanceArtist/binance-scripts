@@ -8,13 +8,14 @@ import { tradeController } from '../../../generated/spot_api.yaml/paths/TradeCon
 import { streamController } from '../../../generated/spot_api.yaml/paths/StreamController';
 import { fromLossPercent } from '../../domain/trade/stopLoss';
 import { makeCandleBuyTrigger } from '../../domain/trade/candleTrigger';
+import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
   config
 );
 
-const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);
+const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
 const market = makeMarketAPI({ httpClient, socketClient });
 
