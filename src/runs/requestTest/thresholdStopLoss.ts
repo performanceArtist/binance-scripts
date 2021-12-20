@@ -28,9 +28,9 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
+const market = makeMarketAPI.value.run({ httpClient, socketClient });
 
-const streams = makeSplitCandleStreams({ market })({
+const streams = makeSplitCandleStreams.value.run({ market })({
   symbol: { base: 'BTC', quote: 'USDT' },
   startTime: option.some(new Date(2021, 11, 6).getTime()),
   total: 1000,
@@ -47,13 +47,16 @@ const { action$, spot } = pipe(
   price$ => makeMockSpot({ price$ })
 );
 
-const manageStop = thresholdStopLoss({
+const manageStop = thresholdStopLoss.value.run({
   getClosedCurrentCandle: () => streams.currentClosed$,
   spot
 });
 
 const order$ = pipe(
-  spotMarketStopLimit({ spot, getBalance: () => observableEither.of(10000) }),
+  spotMarketStopLimit.value.run({
+    spot,
+    getBalance: () => observableEither.of(10000)
+  }),
   initialOrder =>
     initialOrder({
       symbol: { base: 'BTC', quote: 'USDT' },

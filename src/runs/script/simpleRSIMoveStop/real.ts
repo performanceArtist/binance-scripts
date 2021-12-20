@@ -2,7 +2,6 @@ import {
   makeBinanceHttpClient,
   makeBinanceWebSocketClient
 } from 'binance-typescript-api';
-import { makeMarketAPI, makeSpot } from '../../../binance';
 import { runScript } from '../../../scripts/simpleRSIMoveStop/run';
 import { config } from '../../../config';
 import ws from 'ws';
@@ -12,7 +11,6 @@ import { fromLimit, fromLossPercent } from '../../../domain/trade/stopLoss';
 import { pipe } from 'fp-ts/lib/function';
 import { sequenceT } from 'fp-ts/lib/Apply';
 import { array, either, option } from 'fp-ts';
-import { makeCandleStreams } from '../../../domain/data';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -21,15 +19,11 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
-
-const makeStreams = makeCandleStreams({ market });
-
 const runRSIScript = runScript({
-  market: makeMarketAPI({ httpClient, socketClient }),
   trade: tradeController({ httpClient }),
   stream: streamController({ httpClient }),
   socketClient,
+  httpClient,
   signQuery
 });
 
@@ -43,11 +37,8 @@ const { script$, state } = runRSIScript({
     base: 'BTC',
     quote: 'USDT'
   },
-  candleStreams: makeStreams({
-    symbol,
-    interval: '5m',
-    lookbehind: 500
-  }),
+  interval: '5m',
+  lookbehind: 500,
   restop: {
     interval: '5m',
     count: 20,

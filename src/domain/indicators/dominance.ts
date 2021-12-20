@@ -8,10 +8,11 @@ import { intervalTimestamps } from '../utils';
 import { CurrencyPair } from '../data/currencyPair';
 import { partialf } from '../../utils/partial';
 import { getXCandles } from '../trade/market';
+import { container } from '@performance-artist/fp-ts-adt';
 
 export const makeGetDominance = pipe(
   getXCandles,
-  reader.map(
+  container.map(
     getXCandles => ({
       symbol,
       baseSymbol,
@@ -45,14 +46,14 @@ export const makeGetDominance = pipe(
   )
 );
 
-export const makeGetBTCDominance = flow(
+export const makeGetBTCDominance = pipe(
   makeGetDominance,
-  partialf({ baseSymbol: { base: 'BTC', quote: 'USDT' } })
+  container.map(partialf({ baseSymbol: { base: 'BTC', quote: 'USDT' } }))
 );
 
 export const makeGetAverageDominance = pipe(
   makeGetDominance,
-  reader.map(
+  container.map(
     makeGetDominance => ({
       symbol,
       baseSymbol,
@@ -90,7 +91,7 @@ export const makeGetAverageDominance = pipe(
   )
 );
 
-export const makeGetAverageBTCDominance = flow(
+export const makeGetAverageBTCDominance = pipe(
   makeGetAverageDominance,
-  partialf({ baseSymbol: { base: 'BTC', quote: 'USDT' } })
+  container.map(partialf({ baseSymbol: { base: 'BTC', quote: 'USDT' } }))
 );

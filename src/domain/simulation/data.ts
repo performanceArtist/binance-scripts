@@ -10,7 +10,7 @@ import * as rx from 'rxjs';
 import { NonEmptyArray } from 'fp-ts/lib/NonEmptyArray';
 import { CurrencyPair } from '../data/currencyPair';
 import { getXCandles, getXLastCandles } from '../trade/market';
-import { readerUtils } from '@performance-artist/fp-ts-adt';
+import { container, readerUtils } from '@performance-artist/fp-ts-adt';
 
 export type SplitCandleStreamsParams = {
   symbol: CurrencyPair;
@@ -47,8 +47,8 @@ export const defaultGetCurrentCandle = (open: Candle, close: Candle) => (
 };
 
 export const makeSplitCandleStreams = pipe(
-  readerUtils.combine(getXLastCandles, getXCandles),
-  reader.map(
+  container.combine(getXLastCandles, getXCandles),
+  container.map(
     ([getXLastCandles, getXCandles]) => (
       params: SplitCandleStreamsParams
     ): CandleStreams => {

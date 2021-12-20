@@ -17,6 +17,7 @@ import { splitStream } from '../../utils/splitStream';
 import { observableEither } from 'fp-ts-rxjs';
 import * as rx from 'rxjs';
 import { GetClosedCurrentCandle } from './market';
+import { container } from '@performance-artist/fp-ts-adt';
 
 export type MovingStopParams = {
   order: StopLossOrder;
@@ -30,41 +31,64 @@ export type MovingStopParams = {
   ) => Either<Error, StopLoss>;
 };
 
-export const movingStopLossFromCandles = (deps: {
-  getClosedCurrentCandle: GetClosedCurrentCandle;
-  spot: Spot;
-}) => ({ order, symbol, interval, count, getStop }: MovingStopParams) => {
-  const { spot, getClosedCurrentCandle } = deps;
-
-  return makeMovingStopLoss({
-    spot,
-    getRestop: current =>
-      pipe(
-        getClosedCurrentCandle({
-          symbol,
-          interval
-        }),
-        splitStream(count),
-        rxo.map(array.sequence(either.either)),
-        rxo.map(
-          either.chain(candles => getStop(candles, current.getValue(), order))
-        )
-      )
-  })({ order, symbol });
+export type MovingStopLossFromCandles = (
+  params: MovingStopParams
+) => {
+  stopLoss$: ObservableEither<Error, void>;
+  current: BehaviorSubject<StopLossOrder>;
+  close: () => ObservableEither<Error, void>;
 };
 
-export type MovingStopLossFromCandles = ReturnType<
-  typeof movingStopLossFromCandles
->;
+export const movingStopLossFromCandles = pipe(
+  container.create<{
+    getClosedCurrentCandle: GetClosedCurrentCandle;
+    spot: Spot;
+  }>()('getClosedCurrentCandle', 'spot'),
+  container.map(
+    (deps): MovingStopLossFromCandles => ({
+      order,
+      symbol,
+      interval,
+      count,
+      getStop
+    }) => {
+      const { spot, getClosedCurrentCandle } = deps;
+
+      return makeMovingStopLoss({
+        spot,
+        getRestop: current =>
+          pipe(
+            getClosedCurrentCandle({
+              symbol,
+              interval
+            }),
+            splitStream(count),
+            rxo.map(array.sequence(either.either)),
+            rxo.map(
+              either.chain(candles =>
+                getStop(candles, current.getValue(), order)
+              )
+            )
+          )
+      })({ order, symbol });
+    }
+  )
+);
+
+export type ThresholdStopLoss = (
+  params: MovingStopParams & {
+    maxLimit: (base: number) => number;
+  }
+) => {
+  stopLoss$: ObservableEither<Error, void>;
+  current: BehaviorSubject<StopLossOrder>;
+  close: () => ObservableEither<Error, void>;
+};
 
 export const thresholdStopLoss = pipe(
   movingStopLossFromCandles,
-  reader.map(
-    movingStopLossFromCandles => (
-      params: MovingStopParams & {
-        maxLimit: (base: number) => number;
-      }
-    ) =>
+  container.map(
+    (movingStopLossFromCandles): ThresholdStopLoss => params =>
       movingStopLossFromCandles({
         ...params,
         getStop: (candles, prevStop, order) =>
@@ -121,8 +145,6 @@ export const getHighLow = (fromCandle: (candle: Candle) => number) => (
     high: Math.max(...prices),
     low: Math.min(...prices)
   }));
-
-export type ThresholdStopLoss = ReturnType<typeof thresholdStopLoss>;
 
 export const makeMovingStopLoss = (deps: {
   spot: Spot;

@@ -10,6 +10,8 @@ import {
   defaultGetCurrentCandle,
   makeSplitCandleStreams
 } from '../../domain/simulation';
+import { container } from '@performance-artist/fp-ts-adt';
+import { pipe } from 'fp-ts/lib/function';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -18,9 +20,17 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
+const makeStreams = pipe(
+  makeSplitCandleStreams,
+  container.base,
+  container.inject('market', makeMarketAPI),
+  container.resolve
+)({
+  httpClient,
+  socketClient
+});
 
-const streams = makeSplitCandleStreams({ market })({
+const streams = makeStreams({
   symbol: {
     base: 'BTC',
     quote: 'USDT'

@@ -21,7 +21,7 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const m = makeIsolatedMargin({
+const m = makeIsolatedMargin.value.run({
   signQuery,
   margin: marginController({ httpClient }),
   trade: tradeController({ httpClient }),

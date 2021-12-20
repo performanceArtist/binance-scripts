@@ -2,7 +2,6 @@ import {
   makeBinanceHttpClient,
   makeBinanceWebSocketClient
 } from 'binance-typescript-api';
-import { makeMarketAPI } from '../../../binance';
 import { config } from '../../../config';
 import ws from 'ws';
 import { makeTestScript } from '../../../scripts/simpleRSI/test';
@@ -21,9 +20,7 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
-
-const testScript = makeTestScript({ market });
+const testScript = makeTestScript({ httpClient, socketClient });
 
 const symbols = [
   {

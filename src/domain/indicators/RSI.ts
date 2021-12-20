@@ -3,7 +3,7 @@ import { observableEither } from 'fp-ts-rxjs';
 import { flow, pipe } from 'fp-ts/lib/function';
 import { NonEmptyArray } from 'fp-ts/lib/NonEmptyArray';
 import { fromRSIAcc, initRSIAcc, nextRSIAcc } from 'trading-indicators';
-import { makeAccStreams } from '../data';
+import { CandleStreams, makeAccStreams } from '../data';
 import { Candle, IndicatorStreams } from '../types';
 
 export const getCandleRSIAcc = (fromCandle: (candle: Candle) => number) => (
@@ -24,11 +24,6 @@ export const makeRSIAccStreams = ({ fromCandle, period }: RSIParams) =>
     ),
     (acc, cur) => either.right(nextRSIAcc(period)(acc, fromCandle(cur)))
   );
-
-export type RSIIndicatorStreams = IndicatorStreams<
-  NonEmptyArray<number>,
-  number
->;
 
 export const makeRSIStreams = (params: RSIParams) =>
   flow(
@@ -54,5 +49,3 @@ export const makeRSIStreams = (params: RSIParams) =>
       };
     }
   );
-
-export type GetRSIStreams = typeof makeRSIStreams;

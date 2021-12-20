@@ -18,10 +18,10 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
+const market = makeMarketAPI.value.run({ httpClient, socketClient });
 
 const volumeLevels$ = pipe(
-  getXLastCandles({ market })({
+  getXLastCandles.value.run({ market })({
     symbol: {
       base: 'BTC',
       quote: 'USDT'

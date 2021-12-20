@@ -36,6 +36,7 @@ import {
   makeSplitCandleStreams,
   SplitCandleStreamsParams
 } from '../simulation/data';
+import { container } from '@performance-artist/fp-ts-adt';
 
 type EMATrendParams = {
   emaPeriod: number;
@@ -70,7 +71,7 @@ export type CurrentEMATrendParams = EMATrendParams & CandleStreamsParams;
 
 export const getCurrentEMATrend = pipe(
   makeCandleStreams,
-  reader.map(makeCandleStreams => (params: CurrentEMATrendParams) =>
+  container.map(makeCandleStreams => (params: CurrentEMATrendParams) =>
     pipe(makeCandleStreams(params), makeEMATrendAcc(params))
   )
 );
@@ -79,7 +80,7 @@ export type SplitEMATrendParams = EMATrendParams & SplitCandleStreamsParams;
 
 export const getSplitEMATrend = pipe(
   makeSplitCandleStreams,
-  reader.map(makeSplitCandleStreams => (params: SplitEMATrendParams) =>
+  container.map(makeSplitCandleStreams => (params: SplitEMATrendParams) =>
     pipe(makeSplitCandleStreams(params), makeEMATrendAcc(params))
   )
 );

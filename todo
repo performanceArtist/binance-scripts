@@ -24,3 +24,4 @@
 24. Rewrite simpleRSI example using "frame"(needs a better name).
 25. DCA as a potential feature.
 26. Replace `const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);` with `const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);`. // Done
+27. Add candle streams caching and replace hardcoded test values with cached functions. 

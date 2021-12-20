@@ -4,13 +4,13 @@ import { observableEither } from 'fp-ts-rxjs';
 import { ObservableEither } from '../domain/types';
 import { pipe } from 'fp-ts/lib/function';
 
-export type KeyStreamDeps = {
+export type KeyStreamParams = {
   getKey: () => ObservableEither<Error, string>;
   putKey: (listenKey: string) => ObservableEither<Error, unknown>;
 };
 
-export const makeListenKeyStream = (deps: KeyStreamDeps) => {
-  const { getKey, putKey } = deps;
+export const makeListenKeyStream = (params: KeyStreamParams) => {
+  const { getKey, putKey } = params;
 
   const ping = (listenKey: string) =>
     pipe(

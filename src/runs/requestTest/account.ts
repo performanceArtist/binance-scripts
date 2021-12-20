@@ -10,15 +10,17 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
   config
 );
 
-const account$ = getSpotAccount({
+const account$ = getSpotAccount.value.run({
   trade: tradeController({ httpClient }),
   signQuery
-});
+})();
 
 account$.subscribe(either.fold(console.error, console.log));
 
 const usdtBalance$ = pipe(
-  getBalanceOf({ trade: tradeController({ httpClient }), signQuery })('USDT')
+  getBalanceOf.value.run({ trade: tradeController({ httpClient }), signQuery })(
+    'USDT'
+  )
 );
 
 usdtBalance$.subscribe(either.fold(console.error, console.log));

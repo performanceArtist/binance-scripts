@@ -11,10 +11,10 @@ import * as rxo from 'rxjs/operators';
 import { Either } from 'fp-ts/lib/Either';
 import { HTTPClient2 } from '../../generated/spot_api.yaml/client/client';
 import * as t from 'io-ts';
-import { intervalTimestamps } from '../domain/utils';
-import { Candle, Interval } from '../domain/types/shared';
+import { Candle } from '../domain/types/shared';
 import { MarketAPI } from '../domain/types/market';
-import { CurrencyPair, pairToString } from '../domain/data/currencyPair';
+import { pairToString } from '../domain/data/currencyPair';
+import { container } from '@performance-artist/fp-ts-adt';
 
 export const fromBinanceApiKline = ([
   timestamp,
@@ -64,48 +64,53 @@ export const fromBinanceSocketKline = ({
   }
 };
 
-export const makeMarketAPI = (deps: {
-  httpClient: HTTPClient2<'ObservableEither'>;
-  socketClient: ReturnType<typeof makeBinanceWebSocketClient>;
-}): MarketAPI => {
-  const { httpClient, socketClient } = deps;
-  const market = marketController({ httpClient });
+export const makeMarketAPI = pipe(
+  container.create<{
+    httpClient: HTTPClient2<'ObservableEither'>;
+    socketClient: ReturnType<typeof makeBinanceWebSocketClient>;
+  }>()('httpClient', 'socketClient'),
+  container.map(
+    (deps): MarketAPI => {
+      const { httpClient, socketClient } = deps;
+      const market = marketController({ httpClient });
 
-  const getCandles: MarketAPI['getCandles'] = ({
-    symbol,
-    interval,
-    startTime,
-    endTime,
-    limit
-  }) =>
-    pipe(
-      market.GET__api_v3_klines({
-        query: {
-          symbol: pairToString(symbol),
-          interval,
-          startTime: option.some(startTime as t.Int),
-          endTime: option.some(endTime as t.Int),
-          limit: option.some(limit as t.Int)
-        }
-      }),
-      rxo.map(
-        either.chain(
-          flow(
-            t.array(BinanceKlineIO).decode,
-            either.mapLeft(e => new Error(String(e.map(v => v.context)))),
-            either.chain(array.traverse(either.either)(fromBinanceApiKline))
+      const getCandles: MarketAPI['getCandles'] = ({
+        symbol,
+        interval,
+        startTime,
+        endTime,
+        limit
+      }) =>
+        pipe(
+          market.GET__api_v3_klines({
+            query: {
+              symbol: pairToString(symbol),
+              interval,
+              startTime: option.some(startTime as t.Int),
+              endTime: option.some(endTime as t.Int),
+              limit: option.some(limit as t.Int)
+            }
+          }),
+          rxo.map(
+            either.chain(
+              flow(
+                t.array(BinanceKlineIO).decode,
+                either.mapLeft(e => new Error(String(e.map(v => v.context)))),
+                either.chain(array.traverse(either.either)(fromBinanceApiKline))
+              )
+            )
+          ),
+          rxo.shareReplay(1)
+        );
+
+      return {
+        getCandles,
+        getCurrentCandle: ({ symbol, interval }) =>
+          pipe(
+            socketClient.kline(pairToString(symbol), interval),
+            rxo.map(either.chain(fromBinanceSocketKline))
           )
-        )
-      ),
-      rxo.shareReplay(1)
-    );
-
-  return {
-    getCandles,
-    getCurrentCandle: ({ symbol, interval }) =>
-      pipe(
-        socketClient.kline(pairToString(symbol), interval),
-        rxo.map(either.chain(fromBinanceSocketKline))
-      )
-  };
-};
+      };
+    }
+  )
+);

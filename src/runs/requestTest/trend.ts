@@ -39,10 +39,10 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
+const market = makeMarketAPI.value.run({ httpClient, socketClient });
 
 const getStreams = (period: number) =>
-  makeSplitCandleStreams({ market })({
+  makeSplitCandleStreams.value.run({ market })({
     symbol: { base: 'BTC', quote: 'USDT' },
     startTime: option.some(period),
     total: 1000,

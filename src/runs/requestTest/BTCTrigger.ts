@@ -1,4 +1,4 @@
-import { makeMarketAPI, makeSpot } from '../../binance';
+import { getBalanceOf, makeMarketAPI, makeSpot } from '../../binance';
 import {
   makeBinanceHttpClient,
   makeBinanceWebSocketClient
@@ -9,6 +9,8 @@ import { streamController } from '../../../generated/spot_api.yaml/paths/StreamC
 import { fromLossPercent } from '../../domain/trade/stopLoss';
 import { makeCandleBuyTrigger } from '../../domain/trade/candleTrigger';
 import ws from 'ws';
+import { container } from '@performance-artist/fp-ts-adt';
+import { pipe } from 'fp-ts/lib/function';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -17,21 +19,18 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
-
-const trade = tradeController({ httpClient });
-
-const spot = makeSpot({
-  trade,
+export const candleBuyTrigger = pipe(
+  makeCandleBuyTrigger,
+  container.base,
+  container.inject('market', makeMarketAPI),
+  container.inject('spot', makeSpot),
+  container.inject('getBalance', getBalanceOf),
+  container.resolve
+)({
+  httpClient,
+  trade: tradeController({ httpClient }),
   stream: streamController({ httpClient }),
   socketClient,
-  signQuery
-});
-
-export const candleBuyTrigger = makeCandleBuyTrigger({
-  market,
-  spot,
-  trade,
   signQuery
 });
 

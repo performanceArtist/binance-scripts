@@ -13,6 +13,7 @@ import { CurrencyPair } from '../../domain/data/currencyPair';
 import { makeRSIStreams, RSIParams } from '../../domain/indicators';
 import { ScriptState } from '../shared/frame';
 import { CandleStreams } from '../../domain/data';
+import { container } from '@performance-artist/fp-ts-adt';
 
 export type ScriptDeps = {
   spot: Spot;
@@ -39,81 +40,84 @@ export type ScriptTrigger =
     }
   | { type: 'PROFIT_TAKEN'; profit: number };
 
-export const makeScript = (deps: ScriptDeps) => (params: ScriptParams) => {
-  const { spot, spotMarketStopLimit } = deps;
-  const { symbol, candleStreams, getBudget, getStop, RSI, rerun } = params;
+export const makeScript = pipe(
+  container.create<ScriptDeps>()('spot', 'spotMarketStopLimit'),
+  container.map(deps => (params: ScriptParams) => {
+    const { spot, spotMarketStopLimit } = deps;
+    const { symbol, candleStreams, getBudget, getStop, RSI, rerun } = params;
 
-  const rsi = makeRSIStreams(RSI.params)(candleStreams);
-  const state = new rx.BehaviorSubject<ScriptState<ScriptTrigger>>({
-    inPosition: false,
-    triggers: []
-  });
+    const rsi = makeRSIStreams(RSI.params)(candleStreams);
+    const state = new rx.BehaviorSubject<ScriptState<ScriptTrigger>>({
+      inPosition: false,
+      triggers: []
+    });
 
-  const script$ = pipe(
-    rsi.currentClosed$, // open phase
-    rxo.filter(
-      either.exists(rsi => rsi < RSI.buyThreshold && rerun(state.getValue()))
-    ),
-    rxo.tap(() => state.next({ ...state.getValue(), inPosition: true })),
-    switchMapEither(() =>
-      // execution phase
-      spotMarketStopLimit({ symbol, getBudget, getStop })
-    ),
-    observableEither.chain(stopLossOrder => {
-      // manage phase
-      const profitTaken = new rx.Subject<{ profit: number }>();
+    const script$ = pipe(
+      rsi.currentClosed$, // open phase
+      rxo.filter(
+        either.exists(rsi => rsi < RSI.buyThreshold && rerun(state.getValue()))
+      ),
+      rxo.tap(() => state.next({ ...state.getValue(), inPosition: true })),
+      switchMapEither(() =>
+        // execution phase
+        spotMarketStopLimit({ symbol, getBudget, getStop })
+      ),
+      observableEither.chain(stopLossOrder => {
+        // manage phase
+        const profitTaken = new rx.Subject<{ profit: number }>();
 
-      const positionClosed$ = pipe(
-        profitTaken.asObservable(),
-        rxo.tap(({ profit }) =>
-          state.next({
-            inPosition: false,
-            triggers: state
-              .getValue()
-              .triggers.concat({ type: 'PROFIT_TAKEN', profit })
-          })
-        )
-      );
-      const stopFilled$ = pipe(
-        stopLossOrder.filled$,
-        observableEither.map(result =>
-          state.next({
-            inPosition: false,
-            triggers: state.getValue().triggers.concat({
-              type: 'STOP_LOSS_TRIGGERED',
-              loss: Math.abs(
-                stopLossOrder.quantity * stopLossOrder.price -
-                  result.price * result.quantity
-              )
+        const positionClosed$ = pipe(
+          profitTaken.asObservable(),
+          rxo.tap(({ profit }) =>
+            state.next({
+              inPosition: false,
+              triggers: state
+                .getValue()
+                .triggers.concat({ type: 'PROFIT_TAKEN', profit })
             })
-          })
-        )
-      );
-
-      return pipe(
-        rsi.currentClosed$,
-        rxo.takeUntil(rx.merge(stopFilled$, positionClosed$)),
-        rxo.filter(either.exists(rsi => rsi > RSI.sellThreshold)),
-        rxo.take(1),
-        switchMapEither(() =>
-          pipe(
-            stopLossOrder.cancel(),
-            switchMapEither(() =>
-              spot.marketSell({ symbol, quantity: stopLossOrder.quantity })
-            ),
-            observableEither.map(result =>
-              profitTaken.next({
-                profit: Math.abs(
-                  result.averagePrice * result.quantity -
-                    stopLossOrder.quantity * stopLossOrder.price
+          )
+        );
+        const stopFilled$ = pipe(
+          stopLossOrder.filled$,
+          observableEither.map(result =>
+            state.next({
+              inPosition: false,
+              triggers: state.getValue().triggers.concat({
+                type: 'STOP_LOSS_TRIGGERED',
+                loss: Math.abs(
+                  stopLossOrder.quantity * stopLossOrder.price -
+                    result.price * result.quantity
                 )
               })
+            })
+          )
+        );
+
+        return pipe(
+          rsi.currentClosed$,
+          rxo.takeUntil(rx.merge(stopFilled$, positionClosed$)),
+          rxo.filter(either.exists(rsi => rsi > RSI.sellThreshold)),
+          rxo.take(1),
+          switchMapEither(() =>
+            pipe(
+              stopLossOrder.cancel(),
+              switchMapEither(() =>
+                spot.marketSell({ symbol, quantity: stopLossOrder.quantity })
+              ),
+              observableEither.map(result =>
+                profitTaken.next({
+                  profit: Math.abs(
+                    result.averagePrice * result.quantity -
+                      stopLossOrder.quantity * stopLossOrder.price
+                  )
+                })
+              )
             )
           )
-        )
-      );
-    })
-  );
+        );
+      })
+    );
 
-  return { script$, state };
-};
+    return { script$, state };
+  })
+);

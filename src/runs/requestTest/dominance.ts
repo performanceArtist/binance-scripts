@@ -18,10 +18,10 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
+const market = makeMarketAPI.value.run({ httpClient, socketClient });
 
-const getBTCDominance = makeGetBTCDominance({ market });
-const getAverageBTCDominance = makeGetAverageBTCDominance({ market });
+const getBTCDominance = makeGetBTCDominance.value.run({ market });
+const getAverageBTCDominance = makeGetAverageBTCDominance.value.run({ market });
 
 const dominance = getAverageBTCDominance({
   symbol: {

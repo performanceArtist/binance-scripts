@@ -18,9 +18,9 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
+const market = makeMarketAPI.value.run({ httpClient, socketClient });
 
-const makeStreams = makeCandleStreams({ market });
+const makeStreams = makeCandleStreams.value.run({ market });
 
 const runRSIScript = runScript({
   socketClient,

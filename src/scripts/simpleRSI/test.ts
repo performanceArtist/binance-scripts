@@ -1,6 +1,7 @@
-import { reader } from 'fp-ts';
+import { container } from '@performance-artist/fp-ts-adt';
 import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
+import { makeMarketAPI } from '../../binance';
 import { CurrencyPair } from '../../domain/data/currencyPair';
 import {
   makeMockSpot,
@@ -8,7 +9,6 @@ import {
   SplitCandleStreamsParams
 } from '../../domain/simulation';
 import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
-import { inject } from '../../utils/partial';
 import { makeScript, ScriptParams } from './make';
 
 export type SimulationParams = {
@@ -18,28 +18,37 @@ export type SimulationParams = {
 };
 
 export const makeTestScript = pipe(
-  makeScript,
-  inject('spotMarketStopLimit', spotMarketStopLimit),
-  inject('getBalance', () => (asset: string) => observableEither.of(1000)),
-  makeScript =>
-    pipe(
-      makeSplitCandleStreams,
-      reader.map(makeSplitCandleStreams => (params: SimulationParams) => {
-        const streams = makeSplitCandleStreams({
-          symbol: params.symbol,
-          ...params.splitStreams
-        });
-        const price$ = pipe(
-          streams.current$,
-          observableEither.map(candle => candle.low)
-        );
-        const { spot, action$ } = makeMockSpot({ price$ });
+  makeSplitCandleStreams,
+  container.map(makeSplitCandleStreams => (params: SimulationParams) => {
+    const streams = makeSplitCandleStreams({
+      symbol: params.symbol,
+      ...params.splitStreams
+    });
+    const price$ = pipe(
+      streams.current$,
+      observableEither.map(candle => candle.low)
+    );
+    const { spot, action$ } = makeMockSpot({ price$ });
 
-        const script = makeScript({
-          spot
-        })({ symbol: params.symbol, candleStreams: streams, ...params.script });
+    const script = pipe(
+      makeScript,
+      container.base,
+      container.inject('spotMarketStopLimit', spotMarketStopLimit),
+      container.inject(
+        'getBalance',
+        container.of((asset: string) => observableEither.of(1000))
+      ),
+      container.inject('spot', container.of(spot)),
+      container.resolve
+    )({})({
+      symbol: params.symbol,
+      candleStreams: streams,
+      ...params.script
+    });
 
-        return { ...script, action$ };
-      })
-    )
+    return { ...script, action$ };
+  }),
+  container.base,
+  container.inject('market', makeMarketAPI),
+  container.resolve
 );

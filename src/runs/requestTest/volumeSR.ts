@@ -19,10 +19,10 @@ const { httpClient, signQuery } = makeBinanceHttpClient(
 
 const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
-const market = makeMarketAPI({ httpClient, socketClient });
+const market = makeMarketAPI.value.run({ httpClient, socketClient });
 
 const volumeLevels$ = pipe(
-  getXCandles({ market })({
+  getXCandles.value.run({ market })({
     symbol: {
       base: 'AVAX',
       quote: 'USDT'

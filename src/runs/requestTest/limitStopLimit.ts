@@ -1,4 +1,4 @@
-import { makeMarketAPI, makeSpot } from '../../binance';
+import { makeSpot } from '../../binance';
 import {
   makeBinanceHttpClient,
   makeBinanceWebSocketClient
@@ -10,6 +10,8 @@ import { tradeController } from '../../../generated/spot_api.yaml/paths/TradeCon
 import { getBalanceOf } from '../../binance/account';
 import { fromLossPercent } from '../../domain/trade/stopLoss';
 import ws from 'ws';
+import { pipe } from 'fp-ts/lib/function';
+import { container } from '@performance-artist/fp-ts-adt';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -20,16 +22,17 @@ const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
 const trade = tradeController({ httpClient });
 
-const spot = makeSpot({
+const spotLimitStopLimit = pipe(
+  makeSpotLimitStopLimit,
+  container.base,
+  container.inject('spot', makeSpot),
+  container.inject('getBalance', getBalanceOf),
+  container.resolve
+)({
   trade,
   stream: streamController({ httpClient }),
   socketClient,
   signQuery
-});
-
-const spotLimitStopLimit = makeSpotLimitStopLimit({
-  spot,
-  getBalance: getBalanceOf({ trade, signQuery })
 });
 
 const order$ = spotLimitStopLimit({

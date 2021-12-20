@@ -3,8 +3,7 @@ import * as rx from 'rxjs';
 import { Either } from 'fp-ts/lib/Either';
 import { CurrencyPair } from './currencyPair';
 import { pipe } from 'fp-ts/lib/function';
-import { readerUtils } from '@performance-artist/fp-ts-adt';
-import { reader } from 'fp-ts';
+import { container } from '@performance-artist/fp-ts-adt';
 import { getClosedCurrentCandle, getXLastCandles } from '../trade/market';
 
 export type CandleStreams = {
@@ -20,12 +19,12 @@ export type CandleStreamsParams = {
 };
 
 export const makeCandleStreams = pipe(
-  readerUtils.combine(
-    reader.ask<{ market: MarketAPI }>(),
+  container.combine(
+    container.create<{ market: MarketAPI }>()('market'),
     getClosedCurrentCandle,
     getXLastCandles
   ),
-  reader.map(
+  container.map(
     ([{ market }, getClosedCurrentCandle, getXLastCandles]) => ({
       symbol,
       interval,
