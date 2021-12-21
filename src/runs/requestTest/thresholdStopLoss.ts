@@ -20,6 +20,9 @@ import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
 import { fromLossPercent } from '../../domain/trade/stopLoss';
 import { switchMapEither } from '../../utils/switchMapEither';
 import ws from 'ws';
+import { selector } from '@performance-artist/fp-ts-adt';
+import { CurrencyPair } from '../../domain/data/currencyPair';
+import { Interval } from '../../domain/types';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -30,25 +33,40 @@ const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);
 
 const market = makeMarketAPI.value.run({ httpClient, socketClient });
 
-const streams = makeSplitCandleStreams.value.run({ market })({
-  symbol: { base: 'BTC', quote: 'USDT' },
-  startTime: option.some(new Date(2021, 11, 6).getTime()),
-  total: 1000,
-  historicalTotal: 200,
-  interval: '5m',
-  getCurrentCandle: () => identity,
-  intervalDelay: 25,
-  updatesInInterval: 1
-});
-
-const { action$, spot } = pipe(
-  streams.current$,
-  observableEither.map(candle => candle.low),
-  price$ => makeMockSpot({ price$ })
+const getStreams = pipe(makeSplitCandleStreams.value.run({ market }), f =>
+  pipe(
+    selector.keys<{ symbol: CurrencyPair; interval: Interval }>()(
+      'symbol',
+      'interval'
+    ),
+    selector.map(rest =>
+      f({
+        startTime: option.some(new Date(2021, 11, 6).getTime()),
+        total: 1000,
+        historicalTotal: 200,
+        getCurrentCandle: () => identity,
+        intervalDelay: 25,
+        updatesInInterval: 1,
+        ...rest
+      })
+    )
+  )
 );
 
+const symbol = { base: 'BTC', quote: 'USDT' };
+
+const interval: Interval = '5m';
+
+const { action$, spot } = makeMockSpot({
+  getCurrentPrice: symbol =>
+    pipe(
+      getStreams.run({ symbol, interval }).current$,
+      observableEither.map(candle => candle.low)
+    )
+});
+
 const manageStop = thresholdStopLoss.value.run({
-  getClosedCurrentCandle: () => streams.currentClosed$,
+  getClosedCurrentCandle: params => getStreams.run(params).currentClosed$,
   spot
 });
 
@@ -59,16 +77,16 @@ const order$ = pipe(
   }),
   initialOrder =>
     initialOrder({
-      symbol: { base: 'BTC', quote: 'USDT' },
+      symbol,
       getBudget: () => 1000,
       getStop: fromLossPercent(0.01, 0.001)
     }),
   switchMapEither(
     order =>
       manageStop({
-        symbol: { base: 'BTC', quote: 'USDT' },
+        symbol,
         order,
-        interval: '5m',
+        interval,
         count: 20,
         maxLimit: base => base,
         getStop: getHighLowStop({

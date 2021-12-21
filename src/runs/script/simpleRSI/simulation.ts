@@ -76,11 +76,11 @@ const symbols = [
 symbols.map(symbol => {
   const { script$, action$, state } = testScript({
     symbol,
+    interval: '5m',
     splitStreams: {
       startTime: option.some(Date.parse('2021-10-29T00:00:00.000+00:00')),
       total: 1000,
       historicalTotal: 500,
-      interval: '5m',
       getCurrentCandle: () => identity,
       intervalDelay: 25,
       updatesInInterval: 1

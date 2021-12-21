@@ -44,11 +44,11 @@ const testPeriods = ({
       period,
       result: testScript({
         symbol,
+        interval: '5m',
         splitStreams: {
           startTime: option.some(period),
           total: 1000,
           historicalTotal: 500,
-          interval: '5m',
           getCurrentCandle: () => identity,
           intervalDelay: 25,
           updatesInInterval: 1

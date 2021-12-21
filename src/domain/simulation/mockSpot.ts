@@ -4,23 +4,24 @@ import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
 import { either } from 'fp-ts';
+import { CurrencyPair } from '../data/currencyPair';
 
 export type MockSpotParams = {
-  price$: ObservableEither<Error, number>;
+  getCurrentPrice: (symbol: CurrencyPair) => ObservableEither<Error, number>;
 };
 
 export const makeMockSpot = (params: MockSpotParams) => {
   const actionEvent = new rx.Subject<SpotAction>();
-  const { price$ } = params;
+  const { getCurrentPrice } = params;
   let pendingOrderIds: number[] = [];
 
   const getLimitFilled = (action: LimitOrderAction) => {
     switch (action.type) {
       case 'STOP_LOSS_LIMIT': {
-        const { stop, limit, quantity } = action;
+        const { symbol, stop, limit, quantity } = action;
 
         return pipe(
-          price$,
+          getCurrentPrice(symbol),
           rxo.filter(either.exists(price => price < stop)),
           observableEither.map(() => ({ price: limit, quantity }))
         );
@@ -29,7 +30,7 @@ export const makeMockSpot = (params: MockSpotParams) => {
         switch (action.side) {
           case 'BUY': {
             return pipe(
-              price$,
+              getCurrentPrice(action.symbol),
               rxo.filter(either.exists(price => price < action.price)),
               observableEither.map(() => ({
                 price: action.price,
@@ -39,7 +40,7 @@ export const makeMockSpot = (params: MockSpotParams) => {
           }
           case 'SELL': {
             return pipe(
-              price$,
+              getCurrentPrice(action.symbol),
               rxo.filter(either.exists(price => price > action.price)),
               observableEither.map(() => ({
                 price: action.price,
@@ -55,7 +56,7 @@ export const makeMockSpot = (params: MockSpotParams) => {
   const spot: Spot = {
     marketBuy: ({ symbol, budget }) =>
       pipe(
-        price$,
+        getCurrentPrice(symbol),
         rxo.take(1),
         observableEither.map(price => {
           actionEvent.next({
@@ -71,7 +72,7 @@ export const makeMockSpot = (params: MockSpotParams) => {
       ),
     marketSell: ({ symbol, quantity }) =>
       pipe(
-        price$,
+        getCurrentPrice(symbol),
         rxo.take(1),
         observableEither.map(price => {
           actionEvent.next({
