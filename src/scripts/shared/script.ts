@@ -9,7 +9,7 @@ export type ScriptState<T> = {
   triggers: T[];
 };
 
-export type FrameDeps<M, O, R, T> = {
+export type ScriptDeps<M, O, R, T> = {
   open$: ObservableEither<Error, M>;
   execute: (meta: M) => ObservableEither<Error, O>;
   manage: (
@@ -19,7 +19,7 @@ export type FrameDeps<M, O, R, T> = {
   rerun: (state: ScriptState<T>) => boolean;
 };
 
-export const frame = <M, O, R, T>(deps: FrameDeps<M, O, R, T>) => {
+export const script = <M, O, R, T>(deps: ScriptDeps<M, O, R, T>) => {
   const { open$, rerun, execute, manage } = deps;
   const state = new rx.BehaviorSubject<ScriptState<T>>({
     inPosition: false,

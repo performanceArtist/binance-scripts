@@ -21,7 +21,7 @@
 21. Rewrite(?) simulation - find a way to deal with `price$` in `mockSpot`. As of now, streams are created outside of the functions that are actually supposed to fetch data, which is odd. It is done so the streams would not be duplicated(so they have the same source). // Done(covered by script indicator usage revamp)
 22. Try getting rid of RSI duplication(getRSI). // Done
 23. Move logging logic for better reusability.
-24. Rewrite simpleRSI example using "frame"(needs a better name).
+24. Rewrite simpleRSI example using "frame"(needs a better name). // Done
 25. DCA as a potential feature.
 26. Replace `const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);` with `const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);`. // Done
 27. Add candle streams caching and replace hardcoded test values with cached functions. // Done

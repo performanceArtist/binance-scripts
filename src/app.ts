@@ -1,1 +1,1 @@
-import './runs/requestTest/thresholdStopLoss';
+import './runs/script/simpleRSI/successRateSimulation';

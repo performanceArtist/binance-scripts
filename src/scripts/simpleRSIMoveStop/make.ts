@@ -5,7 +5,7 @@ import { pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
 import * as rx from 'rxjs';
 import { switchMapEither } from '../../utils/switchMapEither';
-import { frame, ScriptState } from '../shared/frame';
+import { script, ScriptState } from '../shared/script';
 import { CurrencyPair } from '../../domain/data/currencyPair';
 import {
   MarketStopLimitParams,
@@ -66,7 +66,7 @@ export const makeScript = pipe(
     } = params;
     const rsi = makeRSIStreams(RSI.params)(candleStreams);
 
-    return frame<number, StopLossOrder, void, ScriptTrigger>({
+    return script<number, StopLossOrder, void, ScriptTrigger>({
       rerun,
       open$: pipe(
         rsi.currentClosed$,
