@@ -25,3 +25,4 @@
 25. DCA as a potential feature.
 26. Replace `const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL);` with `const socketClient = makeBinanceWebSocketClient(config.baseWebSocketURL, ws);`. // Done
 27. Add candle streams caching and replace hardcoded test values with cached functions. // Done
+28. Try documenting and implementing several use cases for a particular time period.

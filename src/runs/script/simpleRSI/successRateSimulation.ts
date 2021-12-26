@@ -4,7 +4,7 @@ import {
 } from 'binance-typescript-api';
 import { config } from '../../../config';
 import ws from 'ws';
-import { makeTestScript } from '../../../scripts/simpleRSI/test';
+import { makeTestScript } from '../../../scripts/simpleRSI/simulate';
 import { flow, identity, pipe } from 'fp-ts/lib/function';
 import * as rx from 'rxjs';
 import * as rxo from 'rxjs/operators';
@@ -13,6 +13,7 @@ import { logObservable } from '../../../domain/simulation';
 import { CurrencyPair, pairToString } from '../../../domain/data/currencyPair';
 import { fromLossPercent } from '../../../domain/trade/stopLoss';
 import { SpotAction } from '../../../domain/types';
+import { once } from '../../../scripts/shared/rerun';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -55,7 +56,7 @@ const testPeriods = ({
         script: {
           getBudget: () => 1000,
           getStop: fromLossPercent(0.01, 0.001),
-          rerun: state => !state.inPosition,
+          rerun: once,
           RSI: {
             params: {
               period: 14,

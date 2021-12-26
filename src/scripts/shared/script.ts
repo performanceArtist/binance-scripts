@@ -5,36 +5,40 @@ import * as rxo from 'rxjs/operators';
 import * as rx from 'rxjs';
 
 export type ScriptState<T> = {
-  inPosition: boolean;
   triggers: T[];
 };
 
-export type ScriptDeps<M, O, R, T> = {
+export type ScriptDeps<M, O, T> = {
   open$: ObservableEither<Error, M>;
   execute: (meta: M) => ObservableEither<Error, O>;
   manage: (
     order: O,
     onClose: (trigger: T) => void
-  ) => ObservableEither<Error, R>;
+  ) => ObservableEither<Error, unknown>;
   rerun: (state: ScriptState<T>) => boolean;
 };
 
-export const script = <M, O, R, T>(deps: ScriptDeps<M, O, R, T>) => {
+export type ScriptFlow = {
+  open: unknown;
+  execute: unknown;
+  trigger: unknown;
+};
+
+export const script = <F extends ScriptFlow>(
+  deps: ScriptDeps<F['open'], F['execute'], F['trigger']>
+) => {
   const { open$, rerun, execute, manage } = deps;
-  const state = new rx.BehaviorSubject<ScriptState<T>>({
-    inPosition: false,
+  const state = new rx.BehaviorSubject<ScriptState<F['trigger']>>({
     triggers: []
   });
-  const onClose = (trigger: T) =>
+  const onClose = (trigger: F['trigger']) =>
     state.next({
-      inPosition: false,
       triggers: state.getValue().triggers.concat(trigger)
     });
 
   const script$ = pipe(
     open$,
     rxo.filter(() => rerun(state.getValue())),
-    rxo.tap(() => state.next({ ...state.getValue(), inPosition: true })),
     observableEither.chain(execute),
     observableEither.chain(order => manage(order, onClose))
   );

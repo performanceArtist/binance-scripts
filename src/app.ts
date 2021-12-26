@@ -1,1 +1,1 @@
-import './runs/script/simpleRSI/successRateSimulation';
+import './runs/script/simpleRSIMoveStop/successRateSimulation';

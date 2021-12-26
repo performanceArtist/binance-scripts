@@ -11,6 +11,7 @@ import { fromLimit, fromLossPercent } from '../../../domain/trade/stopLoss';
 import { pipe } from 'fp-ts/lib/function';
 import { sequenceT } from 'fp-ts/lib/Apply';
 import { array, either, option } from 'fp-ts';
+import { once } from '../../../scripts/shared/rerun';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,
@@ -57,7 +58,7 @@ const { script$, state } = runRSIScript({
   },
   getBudget: () => 100,
   getStop: fromLossPercent(0.015, 0.0025),
-  rerun: state => state.triggers.length === 0,
+  rerun: once,
   RSI: {
     params: {
       period: 14,

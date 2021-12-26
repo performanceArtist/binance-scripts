@@ -1,9 +1,7 @@
-import { pipe } from 'fp-ts/lib/function';
-import { getBalanceOf, makeMarketAPI, makeSpot } from '../../binance';
-import { makeScript, ScriptParams } from './make';
-import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
 import { container } from '@performance-artist/fp-ts-adt';
+import { pipe } from 'fp-ts/lib/function';
 import { CandleStreamsParams, makeCandleStreams } from '../../domain/data';
+import { makeScript, ScriptParams } from './make';
 
 export const runScript = pipe(
   container.combine(makeScript, makeCandleStreams),
@@ -13,9 +11,5 @@ export const runScript = pipe(
     ) => makeScript({ ...params, candleStreams: makeCandleStreams(params) })
   ),
   container.base,
-  container.inject('spotMarketStopLimit', spotMarketStopLimit),
-  container.inject('getBalance', getBalanceOf),
-  container.inject('spot', makeSpot),
-  container.inject('market', makeMarketAPI),
   container.resolve
 );

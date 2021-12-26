@@ -24,7 +24,7 @@ export const getXCandles = pipe(
           symbol,
           interval,
           startTime,
-          endTime: startTime + intervalTimestamps[interval] * (total - 1),
+          endTime: startTime + intervalTimestamps[interval] * total,
           limit: total
         }),
         rxo.map(

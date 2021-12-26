@@ -33,6 +33,12 @@ export type ScriptParams = {
   };
 };
 
+export type ScriptFlow = {
+  open: number;
+  execute: StopLossOrder;
+  trigger: ScriptTrigger;
+};
+
 export type ScriptTrigger =
   | {
       type: 'STOP_LOSS_TRIGGERED';
@@ -47,7 +53,7 @@ export const makeScript = pipe(
     const { symbol, candleStreams, getBudget, getStop, RSI, rerun } = params;
     const rsi = makeRSIStreams(RSI.params)(candleStreams);
 
-    return script<number, StopLossOrder, void, ScriptTrigger>({
+    return script<ScriptFlow>({
       rerun,
       open$: pipe(
         rsi.currentClosed$,
