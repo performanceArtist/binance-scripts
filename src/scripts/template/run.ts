@@ -1,6 +1,9 @@
 import { container } from '@performance-artist/fp-ts-adt';
 import { pipe } from 'fp-ts/lib/function';
-import { CandleStreamsParams, makeCandleStreams } from '../../domain/data';
+import {
+  CandleStreamsParams,
+  makeCandleStreams
+} from 'trading-indicators-streams';
 import { makeScript, ScriptParams } from './make';
 
 export const runScript = pipe(

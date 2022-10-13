@@ -9,7 +9,7 @@ import { either, option } from 'fp-ts';
 import {
   defaultGetCurrentCandle,
   makeSplitCandleStreams
-} from '../../domain/simulation';
+} from 'trading-indicators-streams';
 import { container } from '@performance-artist/fp-ts-adt';
 import { pipe } from 'fp-ts/lib/function';
 

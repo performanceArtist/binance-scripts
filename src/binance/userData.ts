@@ -1,4 +1,4 @@
-import { ObservableEither } from '../domain/types';
+import { ObservableEither } from 'trading-indicators-streams';
 import { BinanceWebSocketClient } from 'binance-typescript-api';
 import { pipe } from 'fp-ts/lib/function';
 import { either } from 'fp-ts';

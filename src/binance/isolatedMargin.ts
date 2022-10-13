@@ -11,12 +11,12 @@ import { observableEither } from 'fp-ts-rxjs';
 import { makeListenKeyStream } from './listenKey';
 import { getFilledOrderInfo, getNewOrderResponse } from './order';
 import { TradeController2 } from '../../generated/spot_api.yaml/paths/TradeController';
-import { IsolatedMargin } from '../domain/types/margin';
 import {
+  IsolatedMargin,
   CurrencyPair,
   CurrencyType,
   pairToString
-} from '../domain/data/currencyPair';
+} from 'trading-indicators-streams';
 import { marginOrderResponseFull } from '../../generated/spot_api.yaml/components/schemas/marginOrderResponseFull';
 import { marginOrderResponseResult } from '../../generated/spot_api.yaml/components/schemas/marginOrderResponseResult';
 import { marginOrderResponseAck } from '../../generated/spot_api.yaml/components/schemas/marginOrderResponseAck';

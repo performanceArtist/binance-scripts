@@ -1,15 +1,15 @@
 import { observableEither } from 'fp-ts-rxjs';
-import { CurrencyPair } from '../../domain/data/currencyPair';
 import {
+  CurrencyPair,
   makeMockSpot,
   makeSplitCandleStreams,
-  SplitCandleStreamsParams
-} from '../../domain/simulation';
+  SplitCandleStreamsParams,
+  Interval
+} from 'trading-indicators-streams';
 import { makeScript, ScriptParams } from './make';
 import { pipe } from 'fp-ts/lib/function';
 import { container, selector } from '@performance-artist/fp-ts-adt';
 import { makeMarketAPI } from '../../binance';
-import { Interval } from '../../domain/types';
 
 export type SimulationParams = {
   symbol: CurrencyPair;

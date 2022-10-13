@@ -11,25 +11,13 @@ import { generalizeTrend } from 'trading-indicators';
 import {
   logObservable,
   makeSplitCandleStreams,
-  SplitCandleStreamsParams
-} from '../../domain/simulation';
+  openCloseHighLowAverage,
+  makeEMATrendAcc,
+  makeRSIStreams
+} from 'trading-indicators-streams';
 import { observable, observableEither } from 'fp-ts-rxjs';
-import {
-  getXLastCandles,
-  getClosedCurrentCandle
-} from '../../domain/trade/market';
-import { switchMapEither } from '../../utils/switchMapEither';
-import { Candle } from '../../domain/types';
-import {
-  CandleStreamsParams,
-  makeAccStreams,
-  makeCandleStreams
-} from '../../domain/data';
-import { openCloseHighLowAverage } from '../../domain/utils';
-import { makeEMATrendAcc } from '../../domain/indicators/emaTrend';
 import ws from 'ws';
 import { Either } from 'fp-ts/lib/Either';
-import { makeRSIStreams } from '../../domain/indicators';
 import { sequenceT } from 'fp-ts/lib/Apply';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(

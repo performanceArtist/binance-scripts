@@ -4,25 +4,23 @@ import { identity, pipe } from 'fp-ts/lib/function';
 import {
   logObservableToArray,
   makeMockSpot,
-  makeSplitCandleStreams
-} from '../../domain/simulation';
-import {
+  makeSplitCandleStreams,
   getHighLowStop,
-  thresholdStopLoss
-} from '../../domain/trade/movingStopLimit';
+  thresholdStopLoss,
+  spotMarketStopLimit,
+  fromLossPercent,
+  CurrencyPair,
+  Interval
+} from 'trading-indicators-streams';
 import { config } from '../../config';
 import {
   makeBinanceHttpClient,
   makeBinanceWebSocketClient
 } from 'binance-typescript-api';
 import { makeMarketAPI } from '../../binance';
-import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
-import { fromLossPercent } from '../../domain/trade/stopLoss';
 import { switchMapEither } from '../../utils/switchMapEither';
 import ws from 'ws';
 import { selector } from '@performance-artist/fp-ts-adt';
-import { CurrencyPair } from '../../domain/data/currencyPair';
-import { Interval } from '../../domain/types';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
   config.baseAPIURL,

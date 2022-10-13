@@ -6,8 +6,10 @@ import {
 import { config } from '../../config';
 import { tradeController } from '../../../generated/spot_api.yaml/paths/TradeController';
 import { streamController } from '../../../generated/spot_api.yaml/paths/StreamController';
-import { fromLossPercent } from '../../domain/trade/stopLoss';
-import { makeCandleBuyTrigger } from '../../domain/trade/candleTrigger';
+import {
+  fromLossPercent,
+  makeCandleBuyTrigger
+} from 'trading-indicators-streams';
 import ws from 'ws';
 import { container } from '@performance-artist/fp-ts-adt';
 import { pipe } from 'fp-ts/lib/function';

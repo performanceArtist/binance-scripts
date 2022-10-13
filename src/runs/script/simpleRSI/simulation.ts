@@ -8,10 +8,12 @@ import { makeTestScript } from '../../../scripts/simpleRSI/simulate';
 import { identity, pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
 import { option } from 'fp-ts';
-import { logObservable } from '../../../domain/simulation';
-import { pairToString } from '../../../domain/data/currencyPair';
-import { fromLossPercent } from '../../../domain/trade/stopLoss';
-import { SpotAction } from '../../../domain/types';
+import {
+  logObservable,
+  pairToString,
+  fromLossPercent,
+  SpotAction
+} from 'trading-indicators-streams';
 import { once } from '../../../scripts/shared/rerun';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(

@@ -1,7 +1,7 @@
 import * as rxo from 'rxjs/operators';
 import * as rx from 'rxjs';
 import { observableEither } from 'fp-ts-rxjs';
-import { ObservableEither } from '../domain/types';
+import { ObservableEither } from 'trading-indicators-streams';
 import { pipe } from 'fp-ts/lib/function';
 
 export type KeyStreamParams = {

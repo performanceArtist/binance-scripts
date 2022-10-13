@@ -1,4 +1,4 @@
-import { ObservableEither } from '../../domain/types';
+import { ObservableEither } from 'trading-indicators-streams';
 import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';

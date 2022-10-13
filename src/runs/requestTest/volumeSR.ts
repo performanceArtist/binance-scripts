@@ -9,7 +9,7 @@ import { flow, pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
 import { volumeLevels, volumeToMax } from 'trading-indicators';
 import { observableEither } from 'fp-ts-rxjs';
-import { getXCandles } from '../../domain/trade/market';
+import { getXCandles } from 'trading-indicators-streams';
 import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(

@@ -11,9 +11,7 @@ import * as rxo from 'rxjs/operators';
 import { Either } from 'fp-ts/lib/Either';
 import { HTTPClient2 } from '../../generated/spot_api.yaml/client/client';
 import * as t from 'io-ts';
-import { Candle } from '../domain/types/shared';
-import { MarketAPI } from '../domain/types/market';
-import { pairToString } from '../domain/data/currencyPair';
+import { Candle, MarketAPI, pairToString } from 'trading-indicators-streams';
 import { container } from '@performance-artist/fp-ts-adt';
 
 export const fromBinanceApiKline = ([

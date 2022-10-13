@@ -1,8 +1,10 @@
 import { container } from '@performance-artist/fp-ts-adt';
 import { pipe } from 'fp-ts/lib/function';
-import { CandleStreams } from '../../domain/data';
-import { CurrencyPair } from '../../domain/data/currencyPair';
-import { StopLossOrder } from '../../domain/types';
+import {
+  CandleStreams,
+  CurrencyPair,
+  StopLossOrder
+} from 'trading-indicators-streams';
 import { script } from '../shared/script';
 
 export type ScriptDeps = {};

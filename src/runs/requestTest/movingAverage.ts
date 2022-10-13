@@ -8,7 +8,7 @@ import { array, either } from 'fp-ts';
 import { flow, pipe } from 'fp-ts/lib/function';
 import * as rxo from 'rxjs/operators';
 import { getExponentialMA, getSimpleMA } from 'trading-indicators';
-import { getXLastCandles } from '../../domain/trade/market';
+import { getXLastCandles } from 'trading-indicators-streams';
 import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(

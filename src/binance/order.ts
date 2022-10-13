@@ -5,7 +5,7 @@ import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
 import { Int } from 'io-ts';
 import { TradeController2 } from '../../generated/spot_api.yaml/paths/TradeController';
-import { ObservableEither, OrderResponse } from '../domain/types';
+import { ObservableEither, OrderResponse } from 'trading-indicators-streams';
 import { getOrderPrice } from './userData';
 
 export const getNewOrderResponse = pipe(

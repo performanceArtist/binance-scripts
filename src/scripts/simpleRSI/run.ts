@@ -1,9 +1,12 @@
 import { pipe } from 'fp-ts/lib/function';
 import { getBalanceOf, makeMarketAPI, makeSpot } from '../../binance';
 import { makeScript, ScriptParams } from './make';
-import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
+import {
+  spotMarketStopLimit,
+  CandleStreamsParams,
+  makeCandleStreams
+} from 'trading-indicators-streams';
 import { container } from '@performance-artist/fp-ts-adt';
-import { CandleStreamsParams, makeCandleStreams } from '../../domain/data';
 
 export const runScript = pipe(
   container.combine(makeScript, makeCandleStreams),

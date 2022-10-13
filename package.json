@@ -30,6 +30,7 @@
     "replace-in-file": "^6.2.0",
     "rxjs": "^7.3.0",
     "trading-indicators": "git+https://github.com/performanceArtist/trading-indicators.git",
+    "trading-indicators-streams": "git+https://github.com/performanceArtist/trading-indicators-streams.git",
     "ws": "^8.2.2"
   },
   "devDependencies": {

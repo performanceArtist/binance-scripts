@@ -7,7 +7,7 @@ import { config } from '../../../config';
 import ws from 'ws';
 import { tradeController } from '../../../../generated/spot_api.yaml/paths/TradeController';
 import { streamController } from '../../../../generated/spot_api.yaml/paths/StreamController';
-import { fromLossPercent } from '../../../domain/trade/stopLoss';
+import { fromLossPercent } from 'trading-indicators-streams';
 import { once } from '../../../scripts/shared/rerun';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(

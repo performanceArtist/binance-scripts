@@ -4,11 +4,13 @@ import {
   makeBinanceWebSocketClient
 } from 'binance-typescript-api';
 import { config } from '../../config';
-import { makeSpotLimitStopLimit } from '../../domain/trade/limitStopLimit';
+import {
+  makeSpotLimitStopLimit,
+  fromLossPercent
+} from 'trading-indicators-streams';
 import { streamController } from '../../../generated/spot_api.yaml/paths/StreamController';
 import { tradeController } from '../../../generated/spot_api.yaml/paths/TradeController';
 import { getBalanceOf } from '../../binance/account';
-import { fromLossPercent } from '../../domain/trade/stopLoss';
 import ws from 'ws';
 import { pipe } from 'fp-ts/lib/function';
 import { container } from '@performance-artist/fp-ts-adt';

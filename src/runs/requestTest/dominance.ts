@@ -8,7 +8,7 @@ import { either } from 'fp-ts';
 import {
   makeGetAverageBTCDominance,
   makeGetBTCDominance
-} from '../../domain/indicators/dominance';
+} from 'trading-indicators-streams';
 import ws from 'ws';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(

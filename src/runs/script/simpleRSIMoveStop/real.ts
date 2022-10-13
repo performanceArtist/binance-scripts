@@ -7,7 +7,7 @@ import { config } from '../../../config';
 import ws from 'ws';
 import { tradeController } from '../../../../generated/spot_api.yaml/paths/TradeController';
 import { streamController } from '../../../../generated/spot_api.yaml/paths/StreamController';
-import { fromLimit, fromLossPercent } from '../../../domain/trade/stopLoss';
+import { fromLimit, fromLossPercent } from 'trading-indicators-streams';
 import { pipe } from 'fp-ts/lib/function';
 import { sequenceT } from 'fp-ts/lib/Apply';
 import { array, either, option } from 'fp-ts';

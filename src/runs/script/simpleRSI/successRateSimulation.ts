@@ -9,10 +9,13 @@ import { flow, identity, pipe } from 'fp-ts/lib/function';
 import * as rx from 'rxjs';
 import * as rxo from 'rxjs/operators';
 import { array, option } from 'fp-ts';
-import { logObservable } from '../../../domain/simulation';
-import { CurrencyPair, pairToString } from '../../../domain/data/currencyPair';
-import { fromLossPercent } from '../../../domain/trade/stopLoss';
-import { SpotAction } from '../../../domain/types';
+import {
+  logObservable,
+  CurrencyPair,
+  pairToString,
+  fromLossPercent,
+  SpotAction
+} from 'trading-indicators-streams';
 import { once } from '../../../scripts/shared/rerun';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(

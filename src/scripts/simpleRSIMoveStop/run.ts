@@ -1,11 +1,14 @@
 import { makeScript, ScriptParams } from './make';
 import { pipe } from 'fp-ts/lib/function';
-import { movingStopLossFromCandles } from '../../domain/trade/movingStopLimit';
-import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
+import {
+  movingStopLossFromCandles,
+  spotMarketStopLimit,
+  getClosedCurrentCandle,
+  CandleStreamsParams,
+  makeCandleStreams
+} from 'trading-indicators-streams';
 import { getBalanceOf, makeMarketAPI, makeSpot } from '../../binance';
-import { getClosedCurrentCandle } from '../../domain/trade/market';
 import { container } from '@performance-artist/fp-ts-adt';
-import { CandleStreamsParams, makeCandleStreams } from '../../domain/data';
 
 export const runScript = pipe(
   container.combine(makeScript, makeCandleStreams),

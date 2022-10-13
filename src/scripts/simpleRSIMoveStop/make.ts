@@ -1,4 +1,15 @@
-import { Spot, StopLossOrder } from '../../domain/types';
+import {
+  Spot,
+  StopLossOrder,
+  CurrencyPair,
+  MarketStopLimitParams,
+  SpotMarketStopLimit,
+  MovingStopLossFromCandles,
+  MovingStopParams,
+  makeRSIStreams,
+  RSIParams,
+  CandleStreams
+} from 'trading-indicators-streams';
 import { either } from 'fp-ts';
 import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
@@ -6,17 +17,6 @@ import * as rxo from 'rxjs/operators';
 import * as rx from 'rxjs';
 import { switchMapEither } from '../../utils/switchMapEither';
 import { script, ScriptState } from '../shared/script';
-import { CurrencyPair } from '../../domain/data/currencyPair';
-import {
-  MarketStopLimitParams,
-  SpotMarketStopLimit
-} from '../../domain/trade/marketStopLimit';
-import {
-  MovingStopLossFromCandles,
-  MovingStopParams
-} from '../../domain/trade/movingStopLimit';
-import { makeRSIStreams, RSIParams } from '../../domain/indicators';
-import { CandleStreams } from '../../domain/data';
 import { container } from '@performance-artist/fp-ts-adt';
 
 export type ScriptDeps = {

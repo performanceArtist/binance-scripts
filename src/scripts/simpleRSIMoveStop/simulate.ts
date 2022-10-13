@@ -1,18 +1,18 @@
 import { observableEither } from 'fp-ts-rxjs';
-import { CurrencyPair } from '../../domain/data/currencyPair';
 import {
-  makeMockSpot,
+  CurrencyPair,
   makeSplitCandleStreams,
-  SplitCandleStreamsParams
-} from '../../domain/simulation';
+  SplitCandleStreamsParams,
+  movingStopLossFromCandles,
+  spotMarketStopLimit,
+  GetClosedCurrentCandle,
+  Interval,
+  makeMockSpot
+} from 'trading-indicators-streams';
 import { makeScript, ScriptParams } from './make';
 import { pipe } from 'fp-ts/lib/function';
-import { movingStopLossFromCandles } from '../../domain/trade/movingStopLimit';
-import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
 import { container, selector } from '@performance-artist/fp-ts-adt';
-import { GetClosedCurrentCandle } from '../../domain/trade/market';
 import { makeMarketAPI } from '../../binance';
-import { Interval } from '../../domain/types';
 
 export type SimulationParams = {
   symbol: CurrencyPair;

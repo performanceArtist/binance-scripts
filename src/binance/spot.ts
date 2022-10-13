@@ -1,5 +1,5 @@
 import { TradeController2 } from '../../generated/spot_api.yaml/paths/TradeController';
-import { Spot } from '../domain/types';
+import { Spot, pairToString } from 'trading-indicators-streams';
 import { SignQuery, BinanceWebSocketClient } from 'binance-typescript-api';
 import { flow, pipe } from 'fp-ts/lib/function';
 import { either, option } from 'fp-ts';
@@ -12,7 +12,6 @@ import { orderResponseFull } from '../../generated/spot_api.yaml/components/sche
 import { StreamController2 } from '../../generated/spot_api.yaml/paths/StreamController';
 import { makeListenKeyStream } from './listenKey';
 import { getFilledOrderInfo, getNewOrderResponse } from './order';
-import { pairToString } from '../domain/data/currencyPair';
 import { container } from '@performance-artist/fp-ts-adt';
 
 export type SpotDeps = {

@@ -2,14 +2,14 @@ import { container, selector } from '@performance-artist/fp-ts-adt';
 import { observableEither } from 'fp-ts-rxjs';
 import { pipe } from 'fp-ts/lib/function';
 import { makeMarketAPI } from '../../binance';
-import { CurrencyPair } from '../../domain/data/currencyPair';
 import {
+  CurrencyPair,
   makeMockSpot,
   makeSplitCandleStreams,
-  SplitCandleStreamsParams
-} from '../../domain/simulation';
-import { spotMarketStopLimit } from '../../domain/trade/marketStopLimit';
-import { Interval } from '../../domain/types';
+  SplitCandleStreamsParams,
+  spotMarketStopLimit,
+  Interval
+} from 'trading-indicators-streams';
 import { makeScript, ScriptParams } from './make';
 
 export type SimulationParams = {

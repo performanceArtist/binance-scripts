@@ -9,11 +9,15 @@ import { flow, identity, pipe } from 'fp-ts/lib/function';
 import * as rx from 'rxjs';
 import * as rxo from 'rxjs/operators';
 import { array, either, option } from 'fp-ts';
-import { logObservable } from '../../../domain/simulation';
+import {
+  logObservable,
+  fromLimit,
+  fromLossPercent,
+  CurrencyPair,
+  pairToString,
+  SpotAction
+} from 'trading-indicators-streams';
 import { sequenceT } from 'fp-ts/lib/Apply';
-import { fromLimit, fromLossPercent } from '../../../domain/trade/stopLoss';
-import { CurrencyPair, pairToString } from '../../../domain/data/currencyPair';
-import { SpotAction } from '../../../domain/types';
 import { once } from '../../../scripts/shared/rerun';
 
 const { httpClient, signQuery } = makeBinanceHttpClient(
